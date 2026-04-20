@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://esm.sh;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+  font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+  connect-src 'self' https://*.supabase.co https://vhagsqyuuqbltfrtnbtx.supabase.co;
+  img-src 'self' data: blob: https:;
+  frame-src 'none';
+">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Central — VistoriaCondomínio</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:   #4f46e5; --primary-d: #3730a3; --success:   #059669;
+      --danger:    #dc2626; --warning:   #d97706; --bg:        #f1f5f9;
+      --card:      #ffffff; --text:      #0f172a; --muted:     #64748b;
+      --border:    #e2e8f0; --sidebar-bg:#1e1b4b; --radius:    12px;
+      --shadow:    0 2px 16px rgba(0,0,0,.08);
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .hidden   { display: none !important; }
+    .flex     { display: flex; } .flex-col { flex-direction: column; }
+    .gap-1    { gap: .5rem; }   .gap-2    { gap: 1rem; }
+    .items-center { align-items: center; } .justify-between { justify-content: space-between; }
+    .w-full   { width: 100%; }
+    .mt-1 { margin-top: .5rem; } .mt-2 { margin-top: 1rem; }
+    .mb-1 { margin-bottom: .5rem; } .mb-2 { margin-bottom: 1rem; }
+    .text-sm { font-size: .85rem; } .text-xs { font-size: .75rem; }
+    .text-muted { color: var(--muted); } .bold { font-weight: 700; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+
+    .badge { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .7rem; border-radius: 999px; font-size: .72rem; font-weight: 700; }
+    .badge-green  { background: #d1fae5; color: #065f46; }
+    .badge-red    { background: #fee2e2; color: #991b1b; }
+    .badge-blue   { background: #dbeafe; color: #1e3a8a; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; padding: .55rem 1.2rem; border: none; border-radius: var(--radius); font-size: .88rem; font-weight: 600; cursor: pointer; transition: filter .15s, transform .1s; }
+    .btn:hover  { filter: brightness(.92); } .btn:active { transform: scale(.97); }
+    .btn-primary  { background: var(--primary); color: #fff; }
+    .btn-success  { background: var(--success); color: #fff; }
+    .btn-danger   { background: var(--danger);  color: #fff; }
+    .btn-warning  { background: var(--warning); color: #fff; }
+    .btn-ghost    { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+    .btn-sm { padding: .35rem .8rem; font-size: .8rem; border-radius: 8px; }
+
+    .form-group { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+    .form-group label { font-size: .82rem; font-weight: 600; color: #374151; }
+    .form-control { padding: .6rem .9rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; background: #fafafa; transition: border-color .2s, box-shadow .2s; width: 100%; }
+    .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px #4f46e520; background: #fff; }
+    textarea.form-control { resize: vertical; min-height: 90px; }
+    .form-hint { font-size: .75rem; color: var(--muted); margin-top: .2rem; }
+
+    /* LOGIN */
+    #page-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 50%, #7c3aed 100%); padding: 1rem; }
+    .login-box { background: #fff; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.25); padding: 3rem 2.5rem; width: 100%; max-width: 420px; }
+    .login-logo { text-align: center; margin-bottom: 2rem; }
+    .login-logo .logo-big { font-size: 3.5rem; display: block; }
+    .login-logo h1 { font-size: 1.6rem; color: var(--primary); font-weight: 800; margin-top: .4rem; }
+    .login-logo p  { color: var(--muted); font-size: .88rem; }
+    .login-badge { display: inline-block; background: #ede9fe; color: #5b21b6; padding: .25rem .9rem; border-radius: 999px; font-size: .75rem; font-weight: 700; margin-top: .4rem; }
+
+    /* LAYOUT */
+    #app { display: flex; min-height: 100vh; }
+    #sidebar { width: 260px; min-height: 100vh; background: var(--sidebar-bg); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+    .sb-header { padding: 1.5rem 1.2rem; border-bottom: 1px solid #312e81; }
+    .sb-logo { display: flex; align-items: center; gap: .8rem; }
+    .sb-logo-icon { width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, #4f46e5, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .sb-logo-text h2 { color: #fff; font-size: 1rem; font-weight: 800; }
+    .sb-logo-text span { color: #a5b4fc; font-size: .72rem; }
+    .sb-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+    .sb-section { padding: .3rem .8rem .1rem; font-size: .68rem; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: .1em; margin-top: .5rem; }
+    .sb-item { display: flex; align-items: center; gap: .75rem; padding: .7rem 1.2rem; cursor: pointer; color: #c7d2fe; font-size: .88rem; font-weight: 500; border-left: 3px solid transparent; transition: all .15s; margin: .1rem 0; }
+    .sb-item:hover  { background: #312e81; color: #fff; }
+    .sb-item.active { background: #4f46e520; color: #a5b4fc; border-left-color: #818cf8; }
+    .sb-item .sb-icon { font-size: 1.1rem; width: 1.4rem; text-align: center; flex-shrink: 0; }
+    .sb-item .sb-badge { margin-left: auto; background: #4f46e5; color: #fff; font-size: .68rem; font-weight: 700; padding: .1rem .5rem; border-radius: 999px; }
+    .sb-footer { padding: 1rem 1.2rem; border-top: 1px solid #312e81; }
+    .sb-user { display: flex; align-items: center; gap: .8rem; margin-bottom: .8rem; }
+    .sb-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .95rem; flex-shrink: 0; }
+    .sb-user-name { color: #f1f5f9; font-size: .88rem; font-weight: 700; }
+    .sb-user-role { color: #94a3b8; font-size: .72rem; }
+
+    #main { margin-left: 260px; flex: 1; display: flex; flex-direction: column; }
+    #topbar { background: #fff; border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+    .topbar-left h2 { font-size: 1.15rem; font-weight: 800; }
+    .topbar-left p  { font-size: .78rem; color: var(--muted); }
+    .topbar-right { display: flex; align-items: center; gap: 1rem; }
+    #content { padding: 1.5rem; flex: 1; }
+
+    .page { display: none; } .page.active { display: block; }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.3rem 1.5rem; display: flex; align-items: center; gap: 1rem; border-left: 4px solid transparent; transition: transform .2s, box-shadow .2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,.1); }
+    .stat-card.indigo  { border-left-color: #6366f1; } .stat-card.green { border-left-color: #10b981; }
+    .stat-card.blue    { border-left-color: #3b82f6; } .stat-card.orange { border-left-color: #f59e0b; }
+    .stat-card.purple  { border-left-color: #8b5cf6; }
+    .stat-icon-wrap { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+    .stat-icon-wrap.indigo { background: #eef2ff; } .stat-icon-wrap.green  { background: #d1fae5; }
+    .stat-icon-wrap.blue   { background: #dbeafe; } .stat-icon-wrap.orange { background: #fef3c7; }
+    .stat-icon-wrap.purple { background: #ede9fe; }
+    .stat-val { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+    .stat-lbl { font-size: .8rem; color: var(--muted); margin-top: .2rem; }
+
+    /* CONDO CARDS */
+    .condo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.2rem; }
+    .condo-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); transition: transform .2s, box-shadow .2s; }
+    .condo-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+    .condo-card-banner { height: 80px; position: relative; display: flex; align-items: center; padding: 0 1.2rem; gap: .9rem; }
+    .condo-logo-circle { width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,.25); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; border: 3px solid rgba(255,255,255,.4); flex-shrink: 0; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+    .condo-card-name { color: #fff; font-size: 1rem; font-weight: 800; text-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .condo-card-sub  { color: rgba(255,255,255,.85); font-size: .75rem; }
+    .condo-card-body { padding: 1rem 1.2rem; }
+    .condo-info-row  { display: flex; align-items: center; gap: .5rem; font-size: .83rem; color: var(--muted); margin-bottom: .35rem; }
+    .condo-stats-row { display: flex; gap: .6rem; margin: .8rem 0; }
+    .condo-stat-mini { flex: 1; background: #f8fafc; border-radius: 8px; padding: .5rem; text-align: center; border: 1px solid var(--border); }
+    .condo-stat-mini .val { font-size: 1.1rem; font-weight: 800; }
+    .condo-stat-mini .lbl { font-size: .68rem; color: var(--muted); }
+    .condo-card-actions { display: flex; gap: .5rem; padding: .8rem 1.2rem; border-top: 1px solid var(--border); background: #fafafa; flex-wrap: wrap; }
+
+    /* COLOR PICKER */
+    .color-options { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .3rem; }
+    .color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform .15s, border-color .15s; }
+    .color-dot:hover { transform: scale(1.15); }
+    .color-dot.selected { border-color: #1e293b; transform: scale(1.15); }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 1rem; }
+    .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 580px; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+    .modal-lg { max-width: 780px; }
+    .modal-header { padding: 1.3rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 1; }
+    .modal-header h3 { font-size: 1.05rem; font-weight: 800; }
+    .modal-close { cursor: pointer; font-size: 1.3rem; color: var(--muted); border: none; background: none; }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: .7rem; position: sticky; bottom: 0; background: #fff; }
+
+    /* ALERT */
+    .alert { padding: .8rem 1.1rem; border-radius: 10px; font-size: .88rem; margin-bottom: 1rem; display: flex; align-items: center; gap: .6rem; }
+    .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+    .alert-danger  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-info    { background: #dbeafe; color: #1e3a8a; border: 1px solid #93c5fd; }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th { text-align: left; padding: .8rem 1rem; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    td { padding: .7rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    /* URL BOX */
+    .url-box { display: flex; align-items: center; gap: .5rem; background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; }
+    .url-box span { flex: 1; font-size: .82rem; color: var(--primary); font-family: monospace; word-break: break-all; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 1.2rem; }
+    .tab-btn { padding: .6rem 1.2rem; cursor: pointer; font-size: .88rem; font-weight: 600; color: var(--muted); border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s, border-color .15s; }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-content { display: none; } .tab-content.active { display: block; }
+
+    /* PORTAL PREVIEW */
+    .portal-preview { border-radius: 12px; overflow: hidden; border: 2px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,.1); }
+    .portal-preview-header { padding: 1rem 1.5rem; color: #fff; display: flex; align-items: center; gap: .8rem; }
+    .portal-preview-body { padding: 1rem 1.5rem; background: #f8fafc; }
+
+    /* LOADING */
+    .loading-spinner { display: flex; align-items: center; justify-content: center; gap: .5rem; padding: 2rem; color: var(--muted); }
+    .spinner { width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* GLOBAL ALERT */
+    #global-alert { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; min-width: 280px; max-width: 380px; }
+
+    @media (max-width: 900px) {
+      #sidebar { width: 64px; }
+      .sb-logo-text, .sb-item span, .sb-section, .sb-user > div { display: none; }
+      #main { margin-left: 64px; }
+      .sb-item { justify-content: center; padding: .8rem; }
+      .sb-badge { display: none; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      #content { padding: 1rem .75rem; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .condo-grid  { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="page-login">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="logo-big">🏢</span>
+      <h1>VistoriaCondomínio</h1>
+      <p>Painel Administrativo Central</p>
+      <span class="login-badge">👑 ADMIN</span>
+    </div>
+    <div id="login-alert" class="hidden"></div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-user" class="form-control" placeholder="admin@email.com"/>
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-pass" class="form-control" placeholder="••••••"/>
+    </div>
+    <button class="btn btn-primary w-full mt-1" onclick="doLogin()" style="padding:.7rem">
+      🔐 Entrar no Painel
+    </button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <nav id="sidebar">
+    <div class="sb-header">
+      <div class="sb-logo">
+        <div class="sb-logo-icon">🏢</div>
+        <div class="sb-logo-text"><h2>Vistoria</h2><span>Admin Central</span></div>
+      </div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-section">Principal</div>
+      <div class="sb-item active" onclick="goTo('dashboard')" data-page="dashboard"><span class="sb-icon">📊</span><span>Dashboard</span></div>
+      <div class="sb-section">Condomínios</div>
+      <div class="sb-item" onclick="goTo('condominios')" data-page="condominios"><span class="sb-icon">🏢</span><span>Gerenciar Condomínios</span><span class="sb-badge" id="sb-count-condo">0</span></div>
+      <div class="sb-item" onclick="goTo('portais')" data-page="portais"><span class="sb-icon">🌐</span><span>Portais / Sites</span></div>
+      <div class="sb-section">Usuários</div>
+      <div class="sb-item" onclick="goTo('funcionarios')" data-page="funcionarios"><span class="sb-icon">👷</span><span>Funcionários</span><span class="sb-badge" id="sb-count-func">0</span></div>
+      <div class="sb-item" onclick="goTo('sindicos')" data-page="sindicos"><span class="sb-icon">👤</span><span>Síndicos</span></div>
+      <div class="sb-section">Vistorias</div>
+      <div class="sb-item" onclick="goTo('vistorias')" data-page="vistorias"><span class="sb-icon">📋</span><span>Todas as Vistorias</span><span class="sb-badge" id="sb-count-vist">0</span></div>
+      <div class="sb-section">Sistema</div>
+      <div class="sb-item" onclick="goTo('configuracoes')" data-page="configuracoes"><span class="sb-icon">⚙️</span><span>Configurações</span></div>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-avatar" id="sb-avatar">A</div>
+        <div><div class="sb-user-name" id="sb-name">Admin</div><div class="sb-user-role">Administrador</div></div>
+      </div>
+      <button class="btn btn-ghost w-full btn-sm" onclick="doLogout()">🚪 Sair</button>
+    </div>
+  </nav>
+
+  <div id="main">
+    <div id="topbar">
+      <div class="topbar-left">
+        <h2 id="topbar-title">Dashboard</h2>
+        <p id="topbar-sub" class="text-xs text-muted"></p>
+      </div>
+      <div class="topbar-right">
+        <span id="clock" class="text-sm text-muted"></span>
+      </div>
+    </div>
+    <div id="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="pg-dashboard">
+        <div class="stats-grid" id="stats-grid"></div>
+        <div class="grid-2 gap-2">
+          <div class="card"><h3 class="mb-2" style="font-size:.95rem">🏢 Condomínios Recentes</h3><div id="dash-condos-recentes"></div></div>
+          <div class="card"><h3 class="mb-2" style="font-size:.95rem">📋 Últimas Vistorias</h3><div id="dash-vistorias-recentes"></div></div>
+        </div>
+      </div>
+
+      <!-- CONDOMÍNIOS -->
+      <div class="page" id="pg-condominios">
+        <div class="flex justify-between items-center mb-2">
+          <div></div>
+          <button class="btn btn-primary" onclick="openModalCondo()">➕ Novo Condomínio</button>
+        </div>
+        <div class="condo-grid" id="condo-grid"></div>
+      </div>
+
+      <!-- PORTAIS -->
+      <div class="page" id="pg-portais">
+        <div class="card mb-2" style="padding:1rem 1.5rem; background: linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; border-radius: var(--radius);">
+          <h3 style="font-size:1.05rem; margin-bottom:.3rem">🌐 Portais dos Condomínios</h3>
+          <p style="font-size:.85rem; opacity:.85">Cada condomínio possui seu próprio portal com URL exclusiva.</p>
+        </div>
+        <div id="portais-list"></div>
+      </div>
+
+      <!-- FUNCIONÁRIOS -->
+      <div class="page" id="pg-funcionarios">
+        <div class="flex justify-between items-center mb-2">
+          <div></div>
+          <button class="btn btn-primary" onclick="openModalUser('funcionario')">➕ Novo Funcionário</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>Email</th><th>Cargo</th><th>Condomínio</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="tbody-func"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SÍNDICOS -->
+      <div class="page" id="pg-sindicos">
+        <div class="flex justify-between items-center mb-2">
+          <div></div>
+          <button class="btn btn-primary" onclick="openModalUser('sindico')">➕ Novo Síndico</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>Email</th><th>Condomínio</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="tbody-sind"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTORIAS -->
+      <div class="page" id="pg-vistorias">
+        <div class="card mb-2" style="padding:1rem">
+          <div class="flex gap-2" style="flex-wrap:wrap; align-items:flex-end">
+            <div class="form-group" style="margin:0;min-width:130px"><label>Data Início</label><input type="date" id="f-dt-ini" class="form-control"/></div>
+            <div class="form-group" style="margin:0;min-width:130px"><label>Data Fim</label><input type="date" id="f-dt-fim" class="form-control"/></div>
+            <div class="form-group" style="margin:0;min-width:160px">
+              <label>Condomínio</label>
+              <select id="f-condo" class="form-control"><option value="">Todos</option></select>
+            </div>
+            <div class="form-group" style="margin:0;min-width:120px">
+              <label>Status</label>
+              <select id="f-status" class="form-control"><option value="">Todos</option><option>Aberta</option><option>Resolvida</option></select>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="renderVistorias()">🔍 Filtrar</button>
+          </div>
+        </div>
+        <div id="vistorias-list"></div>
+      </div>
+
+      <!-- CONFIGURAÇÕES -->
+      <div class="page" id="pg-configuracoes">
+        <div class="grid-2 gap-2">
+          <div class="card">
+            <h3 class="mb-2">⚙️ Configurações do Sistema</h3>
+            <div class="form-group"><label>URL Base dos Portais</label><input type="text" id="cfg-url-base" class="form-control" placeholder="https://meusite.netlify.app"/><span class="form-hint">Ex: https://vistoria-cond.netlify.app</span></div>
+            <div class="form-group"><label>Email de Suporte</label><input type="email" id="cfg-email" class="form-control"/></div>
+            <button class="btn btn-primary btn-sm" onclick="salvarConfig()">💾 Salvar</button>
+            <div id="cfg-alert" class="hidden mt-1"></div>
+          </div>
+          <div class="card">
+            <h3 class="mb-2">🔐 Alterar Senha Admin</h3>
+            <div class="form-group"><label>Nova Senha</label><input type="password" id="cfg-senha-nova" class="form-control"/></div>
+            <div class="form-group"><label>Confirmar Senha</label><input type="password" id="cfg-senha-conf" class="form-control"/></div>
+            <button class="btn btn-success btn-sm" onclick="alterarSenha()">🔒 Alterar Senha</button>
+            <div id="senha-alert" class="hidden mt-1"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONDOMÍNIO -->
+<div class="modal-overlay hidden" id="modal-condo">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="modal-condo-title">🏢 Novo Condomínio</h3>
+      <button class="modal-close" onclick="closeModal('modal-condo')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mc-id"/>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-dados', this)">📋 Dados</button>
+        <button class="tab-btn" onclick="switchTab('tab-visual', this)">🎨 Visual</button>
+        <button class="tab-btn" onclick="switchTab('tab-acesso', this)">🔗 URL</button>
+      </div>
+      <!-- TAB DADOS -->
+      <div class="tab-content active" id="tab-dados">
+        <div class="grid-2">
+          <div class="form-group"><label>Nome *</label><input type="text" id="mc-nome" class="form-control" oninput="autoSlug()"/></div>
+          <div class="form-group"><label>CNPJ</label><input type="text" id="mc-cnpj" class="form-control"/></div>
+          <div class="form-group"><label>Endereço</label><input type="text" id="mc-end" class="form-control"/></div>
+          <div class="form-group"><label>Cidade / UF</label><input type="text" id="mc-cidade" class="form-control"/></div>
+          <div class="form-group"><label>CEP</label><input type="text" id="mc-cep" class="form-control"/></div>
+          <div class="form-group"><label>Nº de Unidades</label><input type="number" id="mc-unidades" class="form-control" value="1" min="1"/></div>
+          <div class="form-group"><label>Telefone</label><input type="text" id="mc-tel" class="form-control"/></div>
+          <div class="form-group"><label>Email</label><input type="email" id="mc-email-condo" class="form-control"/></div>
+        </div>
+        <div class="form-group"><label>Status</label><select id="mc-status" class="form-control"><option>Ativo</option><option>Inativo</option></select></div>
+      </div>
+      <!-- TAB VISUAL -->
+      <div class="tab-content" id="tab-visual">
+        <div class="form-group">
+          <label>Emoji / Ícone</label>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem" id="emoji-options"></div>
+          <input type="hidden" id="mc-emoji" value="🏢"/>
+        </div>
+        <div class="form-group">
+          <label>Cor Principal</label>
+          <div class="color-options" id="color-options"></div>
+          <input type="hidden" id="mc-cor" value="#4f46e5"/>
+        </div>
+        <div class="form-group">
+          <label>Cor Secundária</label>
+          <div class="color-options" id="color-options-2"></div>
+          <input type="hidden" id="mc-cor2" value="#7c3aed"/>
+        </div>
+        <div class="form-group"><label>Slogan</label><input type="text" id="mc-slogan" class="form-control" placeholder="Ex: Sua segurança é nossa prioridade" oninput="updatePreview()"/></div>
+        <div class="mb-1 bold text-sm">👁️ Preview</div>
+        <div class="portal-preview">
+          <div class="portal-preview-header" id="preview-header" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">
+            <div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:1.5rem" id="preview-emoji">🏢</div>
+            <div>
+              <div style="font-weight:800;font-size:1rem" id="preview-nome">Nome do Condomínio</div>
+              <div style="font-size:.78rem;opacity:.85" id="preview-slogan">Slogan aqui</div>
+            </div>
+          </div>
+          <div class="portal-preview-body"><p class="text-sm text-muted">Portal de Vistorias</p></div>
+        </div>
+      </div>
+      <!-- TAB URL -->
+      <div class="tab-content" id="tab-acesso">
+        <div class="form-group">
+          <label>Slug da URL</label>
+          <input type="text" id="mc-slug" class="form-control" placeholder="residencial-primavera" oninput="updateSlugPreview()"/>
+          <span class="form-hint">Somente letras minúsculas, números e hífens.</span>
+        </div>
+        <div class="mb-1 text-sm bold">URL do Portal:</div>
+        <div class="url-box mb-2">
+          <span id="slug-preview-url">https://seu-site.netlify.app/portal.html?condo=</span>
+          <button class="btn btn-ghost btn-sm" onclick="copyUrl()">📋 Copiar</button>
+        </div>
+        <div class="alert alert-info">ℹ️ Compartilhe esta URL com os funcionários e síndico do condomínio.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-condo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCondo()">💾 Salvar Condomínio</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: USUÁRIO -->
+<div class="modal-overlay hidden" id="modal-user">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-user-title">Novo Usuário</h3>
+      <button class="modal-close" onclick="closeModal('modal-user')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mu-id"/>
+      <input type="hidden" id="mu-role"/>
+      <div id="mu-alert" class="hidden"></div>
+      <div class="grid-2">
+        <div class="form-group"><label>Nome Completo *</label><input type="text" id="mu-nome" class="form-control"/></div>
+        <div class="form-group"><label>Email *</label><input type="email" id="mu-email" class="form-control"/></div>
+        <div class="form-group"><label>Senha *</label><input type="password" id="mu-pass" class="form-control" placeholder="Mín. 6 caracteres"/></div>
+        <div class="form-group" id="mu-cargo-group">
+          <label>Cargo</label>
+          <select id="mu-cargo" class="form-control">
+            <option>Porteiro</option><option>Vigilante</option><option>Zelador</option><option>Auxiliar</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Condomínio *</label><select id="mu-condo" class="form-control"></select></div>
+        <div class="form-group"><label>Status</label><select id="mu-status" class="form-control"><option>Ativo</option><option>Inativo</option></select></div>
+        <div class="form-group"><label>Telefone</label><input type="tel" id="mu-tel" class="form-control"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-user')">Cancelar</button>
+      <button class="btn btn-primary" id="mu-save-btn" onclick="salvarUser()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ALERT GLOBAL -->
+<div id="global-alert" class="hidden"></div>
+
+<script type="module">
+import { Auth, DB } from './supabase.js';
+
+/* ============================================
+   CONSTANTES VISUAIS
+   ============================================ */
+const COLORS  = ['#4f46e5','#7c3aed','#db2777','#dc2626','#ea580c','#d97706','#16a34a','#0891b2','#0284c7','#1d4ed8','#374151','#0f172a'];
+const COLORS2 = ['#818cf8','#a78bfa','#f472b6','#f87171','#fb923c','#fbbf24','#4ade80','#22d3ee','#38bdf8','#60a5fa','#6b7280','#334155'];
+const EMOJIS  = ['🏢','🏠','🏗️','🏬','🏛️','🌆','🏙️','🌇','🏘️','🏰','🌳','⭐','🌸','🔵','🟢'];
+
+/* ============================================
+   UTILITÁRIOS
+   ============================================ */
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function tipoIcon(tipo) {
+  return {'Manutenção':'🔧','Segurança':'🔒','Limpeza':'🧹','Infra-estrutura':'🏗️','Ocorrência':'⚠️','Rotina':'📋','Outro':'📌'}[tipo]||'📌';
+}
+
+function showGlobal(msg, type='success') {
+  const el = document.getElementById('global-alert');
+  el.className = `alert alert-${type}`;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 4000);
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `alert alert-${type}`;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function loading(id) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div> Carregando...</div>';
+}
+
+function getUrlBase() {
+  return localStorage.getItem('vc_url_base') || window.location.origin;
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+function copyText(txt) {
+  navigator.clipboard.writeText(txt).then(() => showGlobal('📋 URL copiada!', 'success'));
+}
+
+function copyUrl() {
+  const url = document.getElementById('slug-preview-url').textContent;
+  copyText(url);
+}
+
+function updateSlugPreview() {
+  const slug = document.getElementById('mc-slug').value;
+  const base = getUrlBase();
+  document.getElementById('slug-preview-url').textContent = `${base}/portal.html?condo=${slug}`;
+}
+
+function autoSlug() {
+  const nome = document.getElementById('mc-nome').value;
+  const slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  document.getElementById('mc-slug').value = slug;
+  updateSlugPreview();
+  updatePreview();
+}
+
+function updatePreview() {
+  const nome   = document.getElementById('mc-nome').value   || 'Nome do Condomínio';
+  const slogan = document.getElementById('mc-slogan').value || 'Slogan aqui';
+  const emoji  = document.getElementById('mc-emoji').value  || '🏢';
+  const cor    = document.getElementById('mc-cor').value    || '#4f46e5';
+  const cor2   = document.getElementById('mc-cor2').value   || '#7c3aed';
+  document.getElementById('preview-nome').textContent   = nome;
+  document.getElementById('preview-slogan').textContent = slogan;
+  document.getElementById('preview-emoji').textContent  = emoji;
+  document.getElementById('preview-header').style.background = `linear-gradient(135deg,${cor},${cor2})`;
+}
+
+function renderColorPicker(containerId, hiddenId, colors, current) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = colors.map(c => `
+    <div class="color-dot ${c===current?'selected':''}" style="background:${c}" onclick="selectColor('${containerId}','${hiddenId}','${c}')"></div>
+  `).join('');
+}
+
+function selectColor(containerId, hiddenId, color) {
+  document.getElementById(hiddenId).value = color;
+  document.querySelectorAll(`#${containerId} .color-dot`).forEach(d => {
+    d.classList.toggle('selected', d.style.background === color || d.style.backgroundColor === color);
+  });
+  updatePreview();
+}
+
+function renderEmojiPicker() {
+  document.getElementById('emoji-options').innerHTML = EMOJIS.map(e => `
+    <span style="font-size:1.6rem;cursor:pointer;padding:.2rem;border-radius:6px;transition:transform .15s"
+      onclick="selectEmoji('${e}')" title="${e}">${e}</span>
+  `).join('');
+}
+
+function selectEmoji(emoji) {
+  document.getElementById('mc-emoji').value = emoji;
+  updatePreview();
+}
+
+/* ============================================
+   AUTH
+   ============================================ */
+let currentUser = null;
+
+async function doLogin() {
+  const email = document.getElementById('login-user').value.trim();
+  const senha  = document.getElementById('login-pass').value;
+
+  if (!email || !senha) { showAlert('login-alert','⚠️ Preencha email e senha.','danger'); return; }
+
+  const btn = document.querySelector('#page-login .btn-primary');
+  btn.textContent = '⏳ Verificando...'; btn.disabled = true;
+
+  const result = await Auth.login(email, senha);
+  btn.textContent = '🔐 Entrar no Painel'; btn.disabled = false;
+
+  if (!result.ok) { showAlert('login-alert', '❌ ' + result.erro, 'danger'); return; }
+  if (result.usuario.role !== 'admin') { showAlert('login-alert','❌ Acesso negado. Apenas administradores.','danger'); await Auth.logout(); return; }
+
+  currentUser = result.usuario;
+  document.getElementById('page-login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('sb-avatar').textContent = currentUser.nome.charAt(0);
+  document.getElementById('sb-name').textContent   = currentUser.nome;
+  startClock();
+  updateSidebarBadges();
+  goTo('dashboard');
+}
+
+async function doLogout() {
+  await Auth.logout();
+  currentUser = null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('page-login').classList.remove('hidden');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('page-login').classList.contains('hidden')) doLogin();
+});
+
+/* ============================================
+   NAVEGAÇÃO
+   ============================================ */
+const pageTitles = {
+  dashboard:     ['Dashboard',            'Visão geral do sistema'],
+  condominios:   ['Condomínios',          'Gerenciar todos os condomínios'],
+  portais:       ['Portais / Sites',      'Acesso e configuração dos portais'],
+  funcionarios:  ['Funcionários',         'Porteiros, vigilantes e zeladores'],
+  sindicos:      ['Síndicos',             'Gerenciar síndicos por condomínio'],
+  vistorias:     ['Todas as Vistorias',   'Vistorias de todos os condomínios'],
+  configuracoes: ['Configurações',        'Configurações gerais do sistema'],
+};
+
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  const pg = document.getElementById('pg-' + page);
+  if (pg) pg.classList.add('active');
+  const sb = document.querySelector(`[data-page="${page}"]`);
+  if (sb) sb.classList.add('active');
+  const [title, sub] = pageTitles[page] || [page,''];
+  document.getElementById('topbar-title').textContent = title;
+  document.getElementById('topbar-sub').textContent   = sub;
+
+  if (page === 'dashboard')    renderDashboard();
+  if (page === 'condominios')  renderCondominios();
+  if (page === 'portais')      renderPortais();
+  if (page === 'funcionarios') renderUsuarios('funcionario');
+  if (page === 'sindicos')     renderUsuarios('sindico');
+  if (page === 'vistorias')    { prepFiltroVistorias(); renderVistorias(); }
+  if (page === 'configuracoes') loadConfig();
+}
+
+function startClock() {
+  const el = document.getElementById('clock');
+  const tick = () => el.textContent = new Date().toLocaleString('pt-BR');
+  tick(); setInterval(tick, 1000);
+}
+
+async function updateSidebarBadges() {
+  try {
+    const condos = await DB.Condominios.listar();
+    const users  = await DB.Usuarios.listar();
+    const vist   = await DB.Vistorias.listar();
+    document.getElementById('sb-count-condo').textContent = condos.length;
+    document.getElementById('sb-count-func').textContent  = users.filter(u => u.role === 'funcionario').length;
+    document.getElementById('sb-count-vist').textContent  = vist.filter(v => v.status === 'Aberta').length;
+  } catch(e) { console.warn('Badges:', e); }
+}
+
+/* ============================================
+   DASHBOARD
+   ============================================ */
+async function renderDashboard() {
+  loading('stats-grid');
+  try {
+    const [condos, users, vist] = await Promise.all([
+      DB.Condominios.listar(),
+      DB.Usuarios.listar(),
+      DB.Vistorias.listar(),
+    ]);
+    const abertas = vist.filter(v => v.status === 'Aberta').length;
+    const func    = users.filter(u => u.role === 'funcionario').length;
+    const sind    = users.filter(u => u.role === 'sindico').length;
+
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-card indigo"><div class="stat-icon-wrap indigo">🏢</div><div><div class="stat-val">${condos.length}</div><div class="stat-lbl">Condomínios</div></div></div>
+      <div class="stat-card blue">  <div class="stat-icon-wrap blue">📋</div>  <div><div class="stat-val">${vist.length}</div><div class="stat-lbl">Total Vistorias</div></div></div>
+      <div class="stat-card orange"><div class="stat-icon-wrap orange">⏳</div><div><div class="stat-val">${abertas}</div><div class="stat-lbl">Em Aberto</div></div></div>
+      <div class="stat-card green"> <div class="stat-icon-wrap green">👷</div> <div><div class="stat-val">${func}</div><div class="stat-lbl">Funcionários</div></div></div>
+      <div class="stat-card purple"><div class="stat-icon-wrap purple">👤</div><div><div class="stat-val">${sind}</div><div class="stat-lbl">Síndicos</div></div></div>
+    `;
+
+    document.getElementById('dash-condos-recentes').innerHTML = condos.slice(0,3).map(c => `
+      <div style="display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:10px;background:${c.cor||'#4f46e5'}22;display:flex;align-items:center;justify-content:center;font-size:1.2rem">${c.emoji||'🏢'}</div>
+        <div style="flex:1"><div style="font-weight:700;font-size:.88rem">${esc(c.nome)}</div><div class="text-xs text-muted">${esc(c.cidade||'—')} · ${c.unidades||0} unidades</div></div>
+        <span class="badge ${c.status==='Ativo'?'badge-green':'badge-red'}">${c.status}</span>
+      </div>`).join('') || '<p class="text-muted text-sm">Nenhum condomínio.</p>';
+
+    const ultVist = vist.slice(0,4);
+    document.getElementById('dash-vistorias-recentes').innerHTML = ultVist.map(v => `
+      <div style="display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:1.2rem">${tipoIcon(v.tipo)}</div>
+        <div style="flex:1"><div style="font-weight:600;font-size:.85rem">${esc(v.local)} — ${esc(v.condo_nome)}</div><div class="text-xs text-muted">${esc(v.user_nome)} · ${new Date(v.criado_em).toLocaleDateString('pt-BR')}</div></div>
+        <span class="badge ${v.status==='Aberta'?'badge-yellow':'badge-green'}">${v.status}</span>
+      </div>`).join('') || '<p class="text-muted text-sm">Nenhuma vistoria.</p>';
+
+    updateSidebarBadges();
+  } catch(e) {
+    document.getElementById('stats-grid').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar dashboard.</div>';
+  }
+}
+
+/* ============================================
+   CONDOMÍNIOS
+   ============================================ */
+async function renderCondominios() {
+  loading('condo-grid');
+  try {
+    const [condos, users, vist] = await Promise.all([DB.Condominios.listar(), DB.Usuarios.listar(), DB.Vistorias.listar()]);
+
+    document.getElementById('condo-grid').innerHTML = condos.map(c => {
+      const funcs  = users.filter(u => u.condo_id === c.id && u.role === 'funcionario').length;
+      const vAbert = vist.filter(v => v.condo_id === c.id && v.status === 'Aberta').length;
+      const vTotal = vist.filter(v => v.condo_id === c.id).length;
+      const cor    = c.cor  || '#4f46e5';
+      const cor2   = c.cor2 || '#7c3aed';
+      const base   = getUrlBase();
+      return `
+      <div class="condo-card">
+        <div class="condo-card-banner" style="background:linear-gradient(135deg,${cor},${cor2})">
+          <div class="condo-logo-circle">${c.emoji||'🏢'}</div>
+          <div>
+            <div class="condo-card-name">${esc(c.nome)}</div>
+            <div class="condo-card-sub">${esc(c.slogan||c.cidade||'')}</div>
+          </div>
+          <span class="badge ${c.status==='Ativo'?'badge-green':'badge-red'}" style="margin-left:auto;align-self:flex-start;margin-top:.4rem">${c.status}</span>
+        </div>
+        <div class="condo-card-body">
+          <div class="condo-info-row">📍 ${esc(c.endereco||'—')}, ${esc(c.cidade||'—')}</div>
+          <div class="condo-stats-row">
+            <div class="condo-stat-mini"><div class="val">${c.unidades||0}</div><div class="lbl">Unidades</div></div>
+            <div class="condo-stat-mini"><div class="val">${funcs}</div><div class="lbl">Funcion.</div></div>
+            <div class="condo-stat-mini"><div class="val" style="color:${vAbert>0?'#d97706':'#059669'}">${vAbert}</div><div class="lbl">Em Aberto</div></div>
+            <div class="condo-stat-mini"><div class="val">${vTotal}</div><div class="lbl">Vistorias</div></div>
+          </div>
+          <div class="url-box" style="margin-top:.3rem">
+            <span>${base}/portal.html?condo=${esc(c.slug||'')}</span>
+            <button class="btn btn-ghost btn-sm" onclick="copyText('${base}/portal.html?condo=${c.slug}')">📋</button>
+          </div>
+        </div>
+        <div class="condo-card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openModalCondo('${c.id}')">✏️ Editar</button>
+          <button class="btn btn-success btn-sm" onclick="openModalUser('funcionario', null, '${c.id}')">👷 +Func</button>
+          <button class="btn btn-danger btn-sm" onclick="excluirCondo('${c.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('') || '<div class="alert alert-info">Nenhum condomínio cadastrado.</div>';
+  } catch(e) {
+    document.getElementById('condo-grid').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar.</div>';
+  }
+}
+
+/* ============================================
+   PORTAIS
+   ============================================ */
+async function renderPortais() {
+  loading('portais-list');
+  try {
+    const [condos, users, vist] = await Promise.all([DB.Condominios.listar(), DB.Usuarios.listar(), DB.Vistorias.listar()]);
+    const base = getUrlBase();
+
+    document.getElementById('portais-list').innerHTML = condos.map(c => {
+      const funcs = users.filter(u => u.condo_id === c.id && u.role === 'funcionario');
+      const sindi = users.filter(u => u.condo_id === c.id && u.role === 'sindico');
+      const vAb   = vist.filter(v => v.condo_id === c.id && v.status === 'Aberta').length;
+      const url   = `${base}/portal.html?condo=${c.slug}`;
+      const cor   = c.cor  || '#4f46e5';
+      const cor2  = c.cor2 || '#7c3aed';
+      return `
+      <div class="card mb-2" style="padding:0;overflow:hidden;border:1px solid var(--border)">
+        <div style="display:flex;align-items:stretch">
+          <div style="width:160px;min-width:160px;background:linear-gradient(160deg,${cor},${cor2});display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.2rem;gap:.5rem">
+            <div style="font-size:2.5rem">${c.emoji||'🏢'}</div>
+            <div style="color:#fff;font-weight:800;text-align:center;font-size:.9rem;line-height:1.3">${esc(c.nome)}</div>
+            <span class="badge ${c.status==='Ativo'?'badge-green':'badge-red'}">${c.status}</span>
+          </div>
+          <div style="flex:1;padding:1.2rem;display:flex;flex-direction:column;gap:.6rem">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+              <div>
+                <div class="text-sm bold mb-1">🔗 URL do Portal</div>
+                <div class="url-box" style="max-width:400px">
+                  <span>${url}</span>
+                  <button class="btn btn-ghost btn-sm" onclick="copyText('${url}')">📋 Copiar</button>
+                </div>
+              </div>
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                <button class="btn btn-ghost btn-sm" onclick="openModalCondo('${c.id}')">🎨 Editar</button>
+                <button class="btn btn-success btn-sm" onclick="window.open('${url}','_blank')">🌐 Abrir</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:1.5rem;flex-wrap:wrap">
+              <div class="text-sm"><span class="text-muted">👷 Funcionários:</span> <strong>${funcs.length}</strong></div>
+              <div class="text-sm"><span class="text-muted">👤 Síndicos:</span> <strong>${sindi.length}</strong></div>
+              <div class="text-sm"><span class="text-muted">⏳ Em Aberto:</span> <strong style="color:${vAb>0?'#d97706':'#059669'}">${vAb}</strong></div>
+              <div class="text-sm"><span class="text-muted">🏠 Unidades:</span> <strong>${c.unidades||0}</strong></div>
+            </div>
+            <div>
+              <div class="text-xs text-muted mb-1">Usuários com acesso:</div>
+              <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                ${[...funcs,...sindi].slice(0,6).map(u=>`
+                  <span style="display:inline-flex;align-items:center;gap:.3rem;background:#f1f5f9;border:1px solid var(--border);border-radius:999px;padding:.15rem .6rem;font-size:.75rem">
+                    ${u.role==='sindico'?'👤':'👷'} ${esc(u.nome)}
+                  </span>`).join('')}
+                ${[...funcs,...sindi].length>6?`<span class="text-xs text-muted">+${[...funcs,...sindi].length-6} mais</span>`:''}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('') || '<div class="alert alert-info">Nenhum condomínio cadastrado.</div>';
+  } catch(e) {
+    document.getElementById('portais-list').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar portais.</div>';
+  }
+}
+
+/* ============================================
+   USUÁRIOS (funcionários e síndicos)
+   ============================================ */
+async function renderUsuarios(role) {
+  const tbodyId = role === 'funcionario' ? 'tbody-func' : 'tbody-sind';
+  loading(tbodyId);
+  try {
+    const [users, condos] = await Promise.all([DB.Usuarios.listar(), DB.Condominios.listar()]);
+    const lista = users.filter(u => u.role === role);
+
+    document.getElementById(tbodyId).innerHTML = lista.map(u => {
+      const condo = condos.find(c => c.id === u.condo_id);
+      return `<tr>
+        <td><strong>${esc(u.nome)}</strong></td>
+        <td>${esc(u.email)}</td>
+        ${role==='funcionario' ? `<td>${esc(u.cargo||'—')}</td>` : ''}
+        <td>${esc(condo?.nome||'—')}</td>
+        <td><span class="badge ${u.ativo?'badge-green':'badge-red'}">${u.ativo?'Ativo':'Inativo'}</span></td>
+        <td style="display:flex;gap:.4rem">
+          <button class="btn btn-ghost btn-sm" onclick="openModalUser('${role}','${u.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="excluirUsuario('${u.id}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="6" class="text-muted text-sm" style="text-align:center;padding:1rem">Nenhum ${role==='funcionario'?'funcionário':'síndico'} cadastrado.</td></tr>`;
+  } catch(e) {
+    document.getElementById(tbodyId).innerHTML = '<tr><td colspan="6">❌ Erro ao carregar.</td></tr>';
+  }
+}
+
+async function openModalUser(role, id = null, condoIdPresel = null) {
+  document.getElementById('mu-id').value    = id || '';
+  document.getElementById('mu-role').value  = role;
+  document.getElementById('mu-nome').value  = '';
+  document.getElementById('mu-email').value = '';
+  document.getElementById('mu-pass').value  = '';
+  document.getElementById('mu-status').value= 'Ativo';
+  document.getElementById('mu-tel').value   = '';
+  document.getElementById('mu-alert').classList.add('hidden');
+  document.getElementById('mu-cargo-group').style.display = role === 'funcionario' ? '' : 'none';
+  document.getElementById('modal-user-title').textContent = id
+    ? `Editar ${role === 'funcionario' ? 'Funcionário' : 'Síndico'}`
+    : `Novo ${role === 'funcionario' ? 'Funcionário' : 'Síndico'}`;
+
+  const condos = await DB.Condominios.listarAtivos();
+  document.getElementById('mu-condo').innerHTML = condos.map(c =>
+    `<option value="${c.id}" ${c.id===condoIdPresel?'selected':''}>${c.nome}</option>`
+  ).join('');
+
+  if (id) {
+    // Preencher dados para edição
+    const u = await DB.Usuarios.porId(id);
+    if (u) {
+      document.getElementById('mu-nome').value   = u.nome;
+      document.getElementById('mu-email').value  = u.email;
+      document.getElementById('mu-status').value = u.ativo ? 'Ativo' : 'Inativo';
+      document.getElementById('mu-tel').value    = u.telefone || '';
+      if (u.cargo) document.getElementById('mu-cargo').value = u.cargo;
+      if (u.condo_id) document.getElementById('mu-condo').value = u.condo_id;
+    }
+  }
+
+  openModal('modal-user');
+}
+
+async function salvarUser() {
+  const id     = document.getElementById('mu-id').value;
+  const role   = document.getElementById('mu-role').value;
+  const nome   = document.getElementById('mu-nome').value.trim();
+  const email  = document.getElementById('mu-email').value.trim();
+  const senha  = document.getElementById('mu-pass').value;
+  const cargo  = document.getElementById('mu-cargo').value;
+  const condoId= document.getElementById('mu-condo').value;
+  const ativo  = document.getElementById('mu-status').value === 'Ativo';
+
+  if (!nome || !email) { showAlert('mu-alert','⚠️ Preencha nome e email.','danger'); return; }
+
+  const btn = document.getElementById('mu-save-btn');
+  btn.textContent = '⏳ Salvando...'; btn.disabled = true;
+
+  try {
+    if (!id) {
+      if (!senha) { showAlert('mu-alert','⚠️ Digite uma senha.','danger'); btn.textContent='💾 Salvar'; btn.disabled=false; return; }
+      const condo = await DB.Condominios.porId(condoId);
+      const result = await Auth.criarUsuario({ nome, email, senha, role, cargo, condoId, condoNome: condo?.nome || '' });
+      if (!result.ok) { showAlert('mu-alert', '❌ ' + result.erro, 'danger'); btn.textContent='💾 Salvar'; btn.disabled=false; return; }
+    } else {
+      await DB.Usuarios.atualizar(id, { nome, cargo, condo_id: condoId, ativo });
+    }
+
+    closeModal('modal-user');
+    showGlobal(`✅ ${role === 'funcionario' ? 'Funcionário' : 'Síndico'} salvo com sucesso!`, 'success');
+    renderUsuarios(role);
+    updateSidebarBadges();
+  } catch(e) {
+    showAlert('mu-alert', '❌ Erro: ' + e.message, 'danger');
+  } finally {
+    btn.textContent = '💾 Salvar'; btn.disabled = false;
+  }
+}
+
+async function excluirUsuario(id) {
+  if (!confirm('Excluir este usuário? Esta ação não pode ser desfeita.')) return;
+  try {
+    await DB.Usuarios.deletar(id);
+    showGlobal('🗑️ Usuário excluído.', 'success');
+    renderUsuarios('funcionario');
+    renderUsuarios('sindico');
+    updateSidebarBadges();
+  } catch(e) { showGlobal('❌ Erro ao excluir: ' + e.message, 'danger'); }
+}
+
+/* ============================================
+   MODAL CONDOMÍNIO
+   ============================================ */
+async function openModalCondo(id = null) {
+  document.getElementById('mc-id').value        = id || '';
+  document.getElementById('mc-nome').value      = '';
+  document.getElementById('mc-cnpj').value      = '';
+  document.getElementById('mc-end').value       = '';
+  document.getElementById('mc-cidade').value    = '';
+  document.getElementById('mc-cep').value       = '';
+  document.getElementById('mc-unidades').value  = '1';
+  document.getElementById('mc-tel').value       = '';
+  document.getElementById('mc-email-condo').value = '';
+  document.getElementById('mc-slug').value      = '';
+  document.getElementById('mc-slogan').value    = '';
+  document.getElementById('mc-status').value    = 'Ativo';
+  document.getElementById('mc-emoji').value     = '🏢';
+  document.getElementById('mc-cor').value       = '#4f46e5';
+  document.getElementById('mc-cor2').value      = '#7c3aed';
+  document.getElementById('modal-condo-title').textContent = id ? '🏢 Editar Condomínio' : '🏢 Novo Condomínio';
+
+  // Ativa aba inicial
+  switchTab('tab-dados', document.querySelector('.tab-btn'));
+
+  renderEmojiPicker();
+  renderColorPicker('color-options',   'mc-cor',  COLORS,  '#4f46e5');
+  renderColorPicker('color-options-2', 'mc-cor2', COLORS2, '#7c3aed');
+
+  if (id) {
+    const c = await DB.Condominios.porId(id);
+    if (c) {
+      document.getElementById('mc-nome').value      = c.nome;
+      document.getElementById('mc-cnpj').value      = c.cnpj   || '';
+      document.getElementById('mc-end').value       = c.endereco|| '';
+      document.getElementById('mc-cidade').value    = c.cidade  || '';
+      document.getElementById('mc-cep').value       = c.cep     || '';
+      document.getElementById('mc-unidades').value  = c.unidades|| '';
+      document.getElementById('mc-tel').value       = c.telefone|| '';
+      document.getElementById('mc-email-condo').value = c.email_condo || '';
+      document.getElementById('mc-slug').value      = c.slug    || '';
+      document.getElementById('mc-slogan').value    = c.slogan  || '';
+      document.getElementById('mc-status').value    = c.status;
+      document.getElementById('mc-emoji').value     = c.emoji   || '🏢';
+      document.getElementById('mc-cor').value       = c.cor     || '#4f46e5';
+      document.getElementById('mc-cor2').value      = c.cor2    || '#7c3aed';
+      renderColorPicker('color-options',   'mc-cor',  COLORS,  c.cor  || '#4f46e5');
+      renderColorPicker('color-options-2', 'mc-cor2', COLORS2, c.cor2 || '#7c3aed');
+    }
+  }
+
+  updateSlugPreview();
+  updatePreview();
+  openModal('modal-condo');
+}
+
+async function salvarCondo() {
+  const id   = document.getElementById('mc-id').value;
+  const nome = document.getElementById('mc-nome').value.trim();
+  if (!nome) { alert('Digite o nome do condomínio.'); return; }
+
+  const slug = document.getElementById('mc-slug').value ||
+    nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+
+  const dados = {
+    nome,
+    cnpj:        document.getElementById('mc-cnpj').value,
+    endereco:    document.getElementById('mc-end').value,
+    cidade:      document.getElementById('mc-cidade').value,
+    cep:         document.getElementById('mc-cep').value,
+    unidades:    parseInt(document.getElementById('mc-unidades').value)||0,
+    telefone:    document.getElementById('mc-tel').value,
+    email_condo: document.getElementById('mc-email-condo').value,
+    status:      document.getElementById('mc-status').value,
+    emoji:       document.getElementById('mc-emoji').value,
+    cor:         document.getElementById('mc-cor').value,
+    cor2:        document.getElementById('mc-cor2').value,
+    slogan:      document.getElementById('mc-slogan').value,
+    slug,
+  };
+
+  try {
+    if (id) {
+      await DB.Condominios.atualizar(id, dados);
+    } else {
+      await DB.Condominios.criar(dados);
+    }
+    closeModal('modal-condo');
+    showGlobal('✅ Condomínio salvo com sucesso!', 'success');
+    renderCondominios();
+    updateSidebarBadges();
+  } catch(e) {
+    alert('Erro ao salvar: ' + e.message);
+  }
+}
+
+async function excluirCondo(id) {
+  if (!confirm('Excluir este condomínio? Todos os dados serão perdidos.')) return;
+  try {
+    await DB.Condominios.deletar(id);
+    showGlobal('🗑️ Condomínio excluído.', 'success');
+    renderCondominios();
+    updateSidebarBadges();
+  } catch(e) { showGlobal('❌ Erro: ' + e.message, 'danger'); }
+}
+
+/* ============================================
+   VISTORIAS
+   ============================================ */
+async function prepFiltroVistorias() {
+  const condos = await DB.Condominios.listar();
+  const sel = document.getElementById('f-condo');
+  if (sel.options.length <= 1) {
+    condos.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id; opt.textContent = c.nome;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+async function renderVistorias() {
+  loading('vistorias-list');
+  try {
+    const filtros = {};
+    const condoF  = document.getElementById('f-condo').value;
+    const statusF = document.getElementById('f-status').value;
+    if (condoF)  filtros.condoId = condoF;
+    if (statusF) filtros.status  = statusF;
+
+    let list = await DB.Vistorias.listar(filtros);
+    const dtIni = document.getElementById('f-dt-ini').value;
+    const dtFim = document.getElementById('f-dt-fim').value;
+    if (dtIni) list = list.filter(v => v.criado_em >= dtIni);
+    if (dtFim) list = list.filter(v => v.criado_em <= dtFim + 'T23:59:59');
+
+    document.getElementById('vistorias-list').innerHTML = list.length
+      ? list.map(v => vistoriaRow(v)).join('')
+      : '<div class="alert alert-info">📭 Nenhuma vistoria encontrada.</div>';
+  } catch(e) {
+    document.getElementById('vistorias-list').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar.</div>';
+  }
+}
+
+function vistoriaRow(v) {
+  const dt = new Date(v.criado_em).toLocaleString('pt-BR');
+  return `
+  <div style="background:#fff;border-radius:10px;box-shadow:var(--shadow);margin-bottom:.7rem;padding:1rem;border:1px solid var(--border);display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+    <div style="font-size:1.4rem">${tipoIcon(v.tipo)}</div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:700;font-size:.9rem">${esc(v.tipo)} — ${esc(v.local)}</div>
+      <div class="text-xs text-muted">${esc(v.condo_nome)} · ${esc(v.user_nome)} · ${dt}</div>
+      <div class="text-sm" style="margin-top:.3rem;color:#374151">${esc(v.descricao||'').slice(0,100)}${(v.descricao||'').length>100?'…':''}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+      <span class="badge ${v.status==='Aberta'?'badge-yellow':'badge-green'}">${v.status}</span>
+      <button class="btn btn-danger btn-sm" onclick="excluirVistoria('${v.id}')">🗑️</button>
+    </div>
+  </div>`;
+}
+
+async function excluirVistoria(id) {
+  if (!confirm('Excluir esta vistoria?')) return;
+  await DB.Vistorias.deletar(id);
+  showGlobal('🗑️ Vistoria excluída.', 'success');
+  renderVistorias();
+  updateSidebarBadges();
+}
+
+/* ============================================
+   CONFIGURAÇÕES
+   ============================================ */
+function loadConfig() {
+  document.getElementById('cfg-url-base').value = getUrlBase();
+  document.getElementById('cfg-email').value    = localStorage.getItem('vc_email_suporte') || '';
+}
+
+function salvarConfig() {
+  localStorage.setItem('vc_url_base',        document.getElementById('cfg-url-base').value.trim());
+  localStorage.setItem('vc_email_suporte',   document.getElementById('cfg-email').value.trim());
+  showAlert('cfg-alert', '✅ Configurações salvas!', 'success');
+}
+
+async function alterarSenha() {
+  const nova  = document.getElementById('cfg-senha-nova').value;
+  const conf  = document.getElementById('cfg-senha-conf').value;
+  if (!nova || nova.length < 6) { showAlert('senha-alert','⚠️ Senha deve ter ao menos 6 caracteres.','danger'); return; }
+  if (nova !== conf)            { showAlert('senha-alert','⚠️ As senhas não coincidem.','danger'); return; }
+  try {
+    await Auth.trocarSenha(nova);
+    showAlert('senha-alert', '✅ Senha alterada com sucesso!', 'success');
+    document.getElementById('cfg-senha-nova').value = '';
+    document.getElementById('cfg-senha-conf').value = '';
+  } catch(e) {
+    showAlert('senha-alert', '❌ ' + e.message, 'danger');
+  }
+}
+
+/* ============================================
+   EXPOR FUNÇÕES GLOBAIS
+   ============================================ */
+window.doLogin         = doLogin;
+window.doLogout        = doLogout;
+window.goTo            = goTo;
+window.openModalCondo  = openModalCondo;
+window.salvarCondo     = salvarCondo;
+window.excluirCondo    = excluirCondo;
+window.openModalUser   = openModalUser;
+window.salvarUser      = salvarUser;
+window.excluirUsuario  = excluirUsuario;
+window.renderVistorias = renderVistorias;
+window.excluirVistoria = excluirVistoria;
+window.salvarConfig    = salvarConfig;
+window.alterarSenha    = alterarSenha;
+window.closeModal      = closeModal;
+window.switchTab       = switchTab;
+window.copyText        = copyText;
+window.copyUrl         = copyUrl;
+window.updateSlugPreview = updateSlugPreview;
+window.autoSlug        = autoSlug;
+window.updatePreview   = updatePreview;
+window.selectColor     = selectColor;
+window.selectEmoji     = selectEmoji;
+
+</script>
+</body>
+</html>

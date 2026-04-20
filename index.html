@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://esm.sh;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+  font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+  connect-src 'self' https://*.supabase.co https://vhagsqyuuqbltfrtnbtx.supabase.co;
+  img-src 'self' data: blob: https:;
+  frame-src 'none';
+">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VistoriaCondomínio</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:    #1a56db; --primary-d:  #1e40af; --secondary:  #0e9f6e;
+      --danger:     #e02424; --warning:    #ff8800; --bg:         #f3f4f6;
+      --card:       #ffffff; --text:       #111827; --muted:      #6b7280;
+      --border:     #e5e7eb; --radius:     10px;    --shadow:     0 2px 12px rgba(0,0,0,.08);
+      --admin-col:  #7c3aed; --sindico-col:#0e9f6e; --func-col:   #1a56db;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .hidden   { display: none !important; }
+    .flex     { display: flex; }
+    .flex-col { flex-direction: column; }
+    .gap-1    { gap: .5rem; } .gap-2 { gap: 1rem; } .gap-3 { gap: 1.5rem; }
+    .items-center { align-items: center; } .justify-between { justify-content: space-between; }
+    .w-full   { width: 100%; }
+    .mt-1 { margin-top: .5rem; } .mt-2 { margin-top: 1rem; } .mt-3 { margin-top: 1.5rem; }
+    .mb-1 { margin-bottom: .5rem; } .mb-2 { margin-bottom: 1rem; }
+    .text-sm { font-size: .85rem; } .text-xs { font-size: .75rem; }
+    .text-muted { color: var(--muted); } .bold { font-weight: 700; }
+    .rounded  { border-radius: var(--radius); }
+    .badge { display: inline-block; padding: .2rem .6rem; border-radius: 999px; font-size: .72rem; font-weight: 600; }
+    .badge-admin   { background:#ede9fe; color: var(--admin-col); }
+    .badge-sindico { background:#d1fae5; color: #065f46; }
+    .badge-func    { background:#dbeafe; color: #1e3a8a; }
+    .badge-aberta  { background:#fef3c7; color: #92400e; }
+    .badge-resolvida { background:#d1fae5; color: #065f46; }
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: .4rem; padding: .55rem 1.2rem; border: none; border-radius: var(--radius);
+      font-size: .9rem; font-weight: 600; cursor: pointer; transition: filter .15s, transform .1s; text-decoration: none;
+    }
+    .btn:hover { filter: brightness(.92); } .btn:active { transform: scale(.97); }
+    .btn-primary  { background: var(--primary);   color: #fff; }
+    .btn-success  { background: var(--secondary); color: #fff; }
+    .btn-danger   { background: var(--danger);    color: #fff; }
+    .btn-warning  { background: var(--warning);   color: #fff; }
+    .btn-ghost    { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+    .btn-sm { padding: .35rem .75rem; font-size: .8rem; }
+    .form-group { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+    .form-group label { font-size: .85rem; font-weight: 600; color: var(--text); }
+    .form-control {
+      padding: .6rem .9rem; border: 1.5px solid var(--border); border-radius: var(--radius);
+      font-size: .9rem; background: #fafafa; transition: border-color .2s; width: 100%;
+    }
+    .form-control:focus { outline: none; border-color: var(--primary); background: #fff; }
+    textarea.form-control { resize: vertical; min-height: 100px; }
+    select.form-control { cursor: pointer; }
+
+    /* LOGIN */
+    #page-login {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1a56db 0%, #7c3aed 100%); padding: 1rem;
+    }
+    .login-box {
+      background: #fff; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,.18);
+      padding: 2.5rem 2rem; width: 100%; max-width: 420px;
+    }
+    .login-logo { text-align: center; margin-bottom: 1.8rem; }
+    .login-logo .icon { font-size: 3rem; display: block; }
+    .login-logo h1 { font-size: 1.5rem; color: var(--primary); margin-top: .4rem; }
+    .login-logo p  { font-size: .85rem; color: var(--muted); }
+
+    /* LAYOUT PRINCIPAL */
+    #app { display: flex; min-height: 100vh; }
+    #sidebar {
+      width: 240px; min-height: 100vh; background: #1e293b;
+      display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100;
+    }
+    .sidebar-header { padding: 1.2rem 1rem; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: .7rem; }
+    .sidebar-header .logo-icon { font-size: 1.6rem; }
+    .sidebar-header h2 { color: #fff; font-size: 1rem; }
+    .sidebar-header small { color: #94a3b8; font-size: .72rem; display: block; }
+    .sidebar-nav { flex: 1; padding: .8rem 0; overflow-y: auto; }
+    .nav-section-title { padding: .4rem 1rem .2rem; font-size: .68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .08em; }
+    .nav-item {
+      display: flex; align-items: center; gap: .75rem; padding: .65rem 1rem; cursor: pointer;
+      color: #cbd5e1; font-size: .88rem; border-left: 3px solid transparent; transition: all .15s;
+    }
+    .nav-item:hover { background: #334155; color: #fff; }
+    .nav-item.active { background: #1a56db22; color: #93c5fd; border-left-color: #1a56db; }
+    .nav-item .nav-icon { font-size: 1.1rem; width: 1.4rem; text-align: center; }
+    .sidebar-footer { padding: 1rem; border-top: 1px solid #334155; }
+    .user-info { display: flex; align-items: center; gap: .7rem; margin-bottom: .7rem; }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: #fff;
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem; flex-shrink: 0;
+    }
+    .user-name { color: #f1f5f9; font-size: .85rem; font-weight: 600; }
+    .user-role { color: #94a3b8; font-size: .72rem; }
+    #main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    #topbar {
+      background: #fff; border-bottom: 1px solid var(--border); padding: .9rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    #topbar h2 { font-size: 1.1rem; color: var(--text); }
+    .topbar-right { display: flex; align-items: center; gap: 1rem; }
+    #content { padding: 1.5rem; flex: 1; }
+    .page { display: none; } .page.active { display: block; }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 1rem; border-left: 4px solid transparent;
+    }
+    .stat-card.blue   { border-left-color: var(--primary); }
+    .stat-card.green  { border-left-color: var(--secondary); }
+    .stat-card.purple { border-left-color: var(--admin-col); }
+    .stat-card.orange { border-left-color: var(--warning); }
+    .stat-icon { font-size: 1.8rem; }
+    .stat-val  { font-size: 1.6rem; font-weight: 700; }
+    .stat-lbl  { font-size: .8rem; color: var(--muted); }
+
+    /* TABELA */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th { text-align: left; padding: .7rem .9rem; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    td { padding: .65rem .9rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    /* VISTORIA CARD */
+    .vistoria-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 1rem; overflow: hidden; border: 1px solid var(--border); }
+    .vistoria-header { padding: .9rem 1.2rem; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+    .vistoria-meta { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+    .vistoria-body { padding: 1.2rem; }
+    .vistoria-text { margin-bottom: .8rem; line-height: 1.6; }
+    .vistoria-photos { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .8rem; }
+    .vistoria-photos img { width: 90px; height: 70px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid var(--border); transition: transform .15s; }
+    .vistoria-photos img:hover { transform: scale(1.06); }
+
+    /* UPLOAD FOTOS */
+    .photo-upload-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
+    .photo-upload-area:hover { border-color: var(--primary); background: #eff6ff; }
+    .photo-preview-grid { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+    .photo-preview-item { position: relative; width: 80px; height: 65px; }
+    .photo-preview-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 2px solid var(--border); }
+    .photo-remove { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: var(--danger); color: #fff; border-radius: 50%; font-size: .7rem; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 700; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 1rem; }
+    .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 50px rgba(0,0,0,.2); }
+    .modal-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h3 { font-size: 1.05rem; }
+    .modal-close { cursor: pointer; font-size: 1.3rem; color: var(--muted); border: none; background: none; }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: .7rem; }
+
+    /* LIGHTBOX */
+    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.9); display: flex; align-items: center; justify-content: center; z-index: 1000; cursor: zoom-out; }
+    .lightbox img { max-width: 95vw; max-height: 90vh; border-radius: 8px; }
+
+    /* ALERT */
+    .alert { padding: .8rem 1.1rem; border-radius: var(--radius); font-size: .88rem; margin-bottom: 1rem; display: flex; align-items: center; gap: .6rem; }
+    .alert-success { background: #d1fae5; color: #065f46; }
+    .alert-danger  { background: #fee2e2; color: #991b1b; }
+    .alert-info    { background: #dbeafe; color: #1e3a8a; }
+
+    /* FILTROS */
+    .filter-bar { display: flex; flex-wrap: wrap; gap: .7rem; margin-bottom: 1.2rem; align-items: flex-end; }
+    .filter-bar .form-group { margin-bottom: 0; }
+    .filter-bar label { font-size: .8rem; }
+
+    /* LOADING */
+    .loading-spinner { display: flex; align-items: center; justify-content: center; gap: .5rem; padding: 2rem; color: var(--muted); }
+    .spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      #sidebar { width: 60px; }
+      .sidebar-header h2, .sidebar-header small, .nav-item span, .nav-section-title, .user-info > div { display: none; }
+      #main { margin-left: 60px; }
+      .nav-item { justify-content: center; padding: .8rem; }
+    }
+    @media (max-width: 480px) { #content { padding: 1rem .75rem; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+    @media print { #sidebar, #topbar, .btn, .filter-bar, .no-print { display: none !important; } #main { margin-left: 0; } }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="page-login">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="icon">🏢</span>
+      <h1>VistoriaCondomínio</h1>
+      <p>Sistema de Registro de Vistorias</p>
+    </div>
+    <div id="login-alert" class="hidden"></div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-user" class="form-control" placeholder="seu@email.com" autocomplete="off"/>
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-pass" class="form-control" placeholder="Digite sua senha"/>
+    </div>
+    <button class="btn btn-primary w-full mt-1" onclick="doLogin()">🔐 Entrar</button>
+    <p class="text-xs text-muted mt-2" style="text-align:center" id="login-hint">
+      Use o email e senha cadastrados pelo administrador
+    </p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <nav id="sidebar">
+    <div class="sidebar-header">
+      <span class="logo-icon">🏢</span>
+      <div><h2>Vistoria</h2><small>Condomínio</small></div>
+    </div>
+    <div class="sidebar-nav" id="sidebar-nav"></div>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sb-avatar">?</div>
+        <div>
+          <div class="user-name" id="sb-name">-</div>
+          <div class="user-role" id="sb-role">-</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost w-full btn-sm" onclick="doLogout()">🚪 Sair</button>
+    </div>
+  </nav>
+
+  <div id="main">
+    <div id="topbar">
+      <h2 id="topbar-title">Dashboard</h2>
+      <div class="topbar-right">
+        <span id="topbar-datetime" class="text-sm text-muted"></span>
+      </div>
+    </div>
+    <div id="content">
+
+      <!-- DASHBOARD -->
+      <div class="page" id="pg-dashboard">
+        <div class="stats-grid" id="dashboard-stats"></div>
+        <div class="card">
+          <h3 class="mb-2">📋 Últimas Vistorias</h3>
+          <div id="dashboard-recent"></div>
+        </div>
+      </div>
+
+      <!-- NOVA VISTORIA -->
+      <div class="page" id="pg-nova-vistoria">
+        <div class="card" style="max-width:680px">
+          <h3 class="mb-2">📝 Registrar Nova Vistoria</h3>
+          <div id="nova-vistoria-alert" class="hidden"></div>
+          <div class="form-group">
+            <label>Condomínio / Local</label>
+            <select id="nv-condo" class="form-control"></select>
+          </div>
+          <div class="form-group">
+            <label>Local Específico</label>
+            <input type="text" id="nv-local" class="form-control" placeholder="Ex: Portaria, Corredor 2º andar…"/>
+          </div>
+          <div class="form-group">
+            <label>Tipo de Ocorrência</label>
+            <select id="nv-tipo" class="form-control">
+              <option value="Manutenção">🔧 Manutenção</option>
+              <option value="Segurança">🔒 Segurança</option>
+              <option value="Limpeza">🧹 Limpeza</option>
+              <option value="Infra-estrutura">🏗️ Infra-estrutura</option>
+              <option value="Ocorrência">⚠️ Ocorrência</option>
+              <option value="Rotina">📋 Rotina</option>
+              <option value="Outro">📌 Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Descrição</label>
+            <textarea id="nv-desc" class="form-control" placeholder="Descreva detalhadamente…"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Fotos</label>
+            <div class="photo-upload-area" onclick="document.getElementById('nv-photo-input').click()">
+              <span style="font-size:1.8rem">📷</span>
+              <p class="mt-1 text-sm">Clique para adicionar fotos</p>
+              <p class="text-xs text-muted mt-1">JPG, PNG — múltiplas fotos permitidas</p>
+            </div>
+            <input type="file" id="nv-photo-input" multiple accept="image/*" class="hidden" onchange="handlePhotoUpload(event)"/>
+            <div class="photo-preview-grid" id="nv-photo-preview"></div>
+          </div>
+          <div style="display:flex;gap:.7rem">
+            <button class="btn btn-success" onclick="salvarVistoria()">💾 Salvar Vistoria</button>
+            <button class="btn btn-ghost" onclick="limparFormVistoria()">🗑️ Limpar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MINHAS VISTORIAS -->
+      <div class="page" id="pg-minhas-vistorias">
+        <div class="flex justify-between items-center mb-2">
+          <h3>📂 Minhas Vistorias</h3>
+        </div>
+        <div class="filter-bar">
+          <div class="form-group"><label>Data Início</label><input type="date" id="mv-dt-ini" class="form-control"/></div>
+          <div class="form-group"><label>Data Fim</label><input type="date" id="mv-dt-fim" class="form-control"/></div>
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="mv-tipo" class="form-control">
+              <option value="">Todos</option>
+              <option>Manutenção</option><option>Segurança</option><option>Limpeza</option>
+              <option>Infra-estrutura</option><option>Ocorrência</option><option>Rotina</option><option>Outro</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="renderMinhasVistorias()">🔍 Filtrar</button>
+        </div>
+        <div id="minhas-vistorias-list"></div>
+      </div>
+
+      <!-- RELATÓRIO -->
+      <div class="page" id="pg-relatorio">
+        <div class="card mb-2" style="padding:1rem">
+          <h3 class="mb-2">📊 Relatório de Vistorias</h3>
+          <div class="filter-bar">
+            <div class="form-group"><label>Data Início</label><input type="date" id="rel-dt-ini" class="form-control"/></div>
+            <div class="form-group"><label>Data Fim</label><input type="date" id="rel-dt-fim" class="form-control"/></div>
+            <div class="form-group"><label>Tipo</label>
+              <select id="rel-tipo" class="form-control">
+                <option value="">Todos</option>
+                <option>Manutenção</option><option>Segurança</option><option>Limpeza</option>
+                <option>Infra-estrutura</option><option>Ocorrência</option><option>Rotina</option><option>Outro</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Status</label>
+              <select id="rel-status" class="form-control">
+                <option value="">Todos</option><option value="Aberta">Aberta</option><option value="Resolvida">Resolvida</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="renderRelatorio()">🔍 Filtrar</button>
+            <button class="btn btn-ghost btn-sm no-print" onclick="window.print()">🖨️ Imprimir</button>
+          </div>
+        </div>
+        <div id="relatorio-list"></div>
+      </div>
+
+      <!-- FUNCIONÁRIOS -->
+      <div class="page" id="pg-funcionarios">
+        <div class="flex justify-between items-center mb-2">
+          <h3>👷 Funcionários</h3>
+          <button class="btn btn-primary btn-sm" onclick="openModalFunc()">➕ Novo Funcionário</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>Email</th><th>Cargo</th><th>Condomínio</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="tbody-funcionarios"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SÍNDICOS -->
+      <div class="page" id="pg-sindicos">
+        <div class="flex justify-between items-center mb-2">
+          <h3>👤 Síndicos</h3>
+          <button class="btn btn-primary btn-sm" onclick="openModalSindico()">➕ Novo Síndico</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>Email</th><th>Condomínio</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="tbody-sindicos"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONDOMÍNIOS -->
+      <div class="page" id="pg-condominios">
+        <div class="flex justify-between items-center mb-2">
+          <h3>🏢 Condomínios</h3>
+          <button class="btn btn-primary btn-sm" onclick="openModalCondo()">➕ Novo Condomínio</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>Endereço</th><th>Unidades</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="tbody-condominios"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TODAS VISTORIAS -->
+      <div class="page" id="pg-todas-vistorias">
+        <div class="flex justify-between items-center mb-2">
+          <h3>📋 Todas as Vistorias</h3>
+        </div>
+        <div class="filter-bar">
+          <div class="form-group"><label>Data Início</label><input type="date" id="tv-dt-ini" class="form-control"/></div>
+          <div class="form-group"><label>Data Fim</label><input type="date" id="tv-dt-fim" class="form-control"/></div>
+          <div class="form-group"><label>Condomínio</label><select id="tv-condo" class="form-control"><option value="">Todos</option></select></div>
+          <button class="btn btn-primary btn-sm" onclick="renderTodasVistorias()">🔍 Filtrar</button>
+        </div>
+        <div id="todas-vistorias-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAIS -->
+<!-- Modal Funcionário -->
+<div class="modal-overlay hidden" id="modal-func-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-func-title">Novo Funcionário</h3>
+      <button class="modal-close" onclick="closeModal('modal-func-overlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mf-id"/>
+      <div class="form-group"><label>Nome Completo</label><input type="text" id="mf-nome" class="form-control"/></div>
+      <div class="form-group"><label>Email</label><input type="email" id="mf-email" class="form-control"/></div>
+      <div class="form-group"><label>Senha</label><input type="password" id="mf-pass" class="form-control" placeholder="Mín. 6 caracteres"/></div>
+      <div class="form-group"><label>Cargo</label>
+        <select id="mf-cargo" class="form-control">
+          <option>Porteiro</option><option>Vigilante</option><option>Zelador</option><option>Auxiliar</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Condomínio</label><select id="mf-condo" class="form-control"></select></div>
+      <div class="form-group"><label>Status</label>
+        <select id="mf-status" class="form-control"><option>Ativo</option><option>Inativo</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-func-overlay')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarFuncionario()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Síndico -->
+<div class="modal-overlay hidden" id="modal-sindico-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-sindico-title">Novo Síndico</h3>
+      <button class="modal-close" onclick="closeModal('modal-sindico-overlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ms-id"/>
+      <div class="form-group"><label>Nome Completo</label><input type="text" id="ms-nome" class="form-control"/></div>
+      <div class="form-group"><label>Email</label><input type="email" id="ms-email" class="form-control"/></div>
+      <div class="form-group"><label>Senha</label><input type="password" id="ms-pass" class="form-control"/></div>
+      <div class="form-group"><label>Condomínio</label><select id="ms-condo" class="form-control"></select></div>
+      <div class="form-group"><label>Status</label>
+        <select id="ms-status" class="form-control"><option>Ativo</option><option>Inativo</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-sindico-overlay')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarSindico()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Condomínio -->
+<div class="modal-overlay hidden" id="modal-condo-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-condo-title">Novo Condomínio</h3>
+      <button class="modal-close" onclick="closeModal('modal-condo-overlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mc-id"/>
+      <div class="form-group"><label>Nome</label><input type="text" id="mc-nome" class="form-control"/></div>
+      <div class="form-group"><label>Endereço</label><input type="text" id="mc-end" class="form-control"/></div>
+      <div class="form-group"><label>Cidade</label><input type="text" id="mc-cidade" class="form-control"/></div>
+      <div class="form-group"><label>Nº de Unidades</label><input type="number" id="mc-unidades" class="form-control" min="1"/></div>
+      <div class="form-group"><label>Status</label>
+        <select id="mc-status" class="form-control"><option>Ativo</option><option>Inativo</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-condo-overlay')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarCondo()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar Vistoria -->
+<div class="modal-overlay hidden" id="modal-vistoria-overlay">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <h3>✏️ Editar Vistoria</h3>
+      <button class="modal-close" onclick="closeModal('modal-vistoria-overlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mv-id"/>
+      <div class="form-group"><label>Local Específico</label><input type="text" id="mv-local" class="form-control"/></div>
+      <div class="form-group"><label>Tipo</label>
+        <select id="mv-tipo-edit" class="form-control">
+          <option>Manutenção</option><option>Segurança</option><option>Limpeza</option>
+          <option>Infra-estrutura</option><option>Ocorrência</option><option>Rotina</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Descrição</label><textarea id="mv-desc-edit" class="form-control"></textarea></div>
+      <div class="form-group"><label>Status</label>
+        <select id="mv-status-edit" class="form-control">
+          <option value="Aberta">Aberta</option><option value="Resolvida">Resolvida</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Observação</label>
+        <textarea id="mv-obs-edit" class="form-control" placeholder="Adicionar observação…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-vistoria-overlay')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarEdicaoVistoria()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox hidden" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt=""/>
+</div>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script type="module">
+import { Auth, DB } from './supabase.js';
+
+/* ================================================
+   ESTADO GLOBAL
+   ================================================ */
+let currentUser = null;
+let uploadedFiles  = [];  // File objects para upload
+let uploadedPhotos = [];  // URLs após upload (ou base64 preview)
+
+/* ================================================
+   UTILITÁRIOS
+   ================================================ */
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `alert alert-${type}`;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.remove('hidden');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.add('hidden'); }
+
+function tipoIcon(tipo) {
+  const m = { 'Manutenção':'🔧','Segurança':'🔒','Limpeza':'🧹','Infra-estrutura':'🏗️','Ocorrência':'⚠️','Rotina':'📋','Outro':'📌' };
+  return m[tipo] || '📌';
+}
+
+function loading(el_id) {
+  const el = document.getElementById(el_id);
+  if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div> Carregando...</div>';
+}
+
+/* ================================================
+   AUTH
+   ================================================ */
+async function doLogin() {
+  const email = document.getElementById('login-user').value.trim();
+  const senha  = document.getElementById('login-pass').value;
+
+  if (!email || !senha) {
+    showAlert('login-alert', '⚠️ Preencha o email e a senha.', 'danger');
+    return;
+  }
+
+  const btn = document.querySelector('#page-login .btn-primary');
+  btn.textContent = '⏳ Entrando...';
+  btn.disabled = true;
+
+  const result = await Auth.login(email, senha);
+
+  btn.textContent = '🔐 Entrar';
+  btn.disabled = false;
+
+  if (!result.ok) {
+    showAlert('login-alert', '❌ ' + result.erro, 'danger');
+    return;
+  }
+
+  currentUser = result.usuario;
+  document.getElementById('page-login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  initApp();
+}
+
+async function doLogout() {
+  await Auth.logout();
+  currentUser = null;
+  uploadedFiles  = [];
+  uploadedPhotos = [];
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('page-login').classList.remove('hidden');
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('page-login').classList.contains('hidden')) doLogin();
+});
+
+/* ================================================
+   APP INIT
+   ================================================ */
+function initApp() {
+  const r = currentUser.role;
+  document.getElementById('sb-name').textContent  = currentUser.nome;
+  document.getElementById('sb-role').textContent  = r === 'admin' ? 'Administrador' : r === 'sindico' ? 'Síndico' : currentUser.cargo || 'Funcionário';
+  document.getElementById('sb-avatar').textContent = currentUser.nome.charAt(0).toUpperCase();
+  buildSidebar();
+  startClock();
+  navigateTo('dashboard');
+}
+
+function buildSidebar() {
+  const r = currentUser.role;
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = '';
+  const sections = [];
+
+  sections.push({ title: 'Geral', items: [{ icon: '📊', label: 'Dashboard', page: 'dashboard' }] });
+
+  if (r === 'funcionario') {
+    sections.push({ title: 'Vistoria', items: [
+      { icon: '📝', label: 'Nova Vistoria',    page: 'nova-vistoria' },
+      { icon: '📂', label: 'Minhas Vistorias', page: 'minhas-vistorias' },
+    ]});
+  }
+
+  if (r === 'sindico' || r === 'admin') {
+    sections.push({ title: 'Relatórios', items: [
+      { icon: '📊', label: 'Relatório',       page: 'relatorio' },
+      { icon: '📋', label: 'Todas Vistorias', page: 'todas-vistorias' },
+    ]});
+  }
+
+  if (r === 'admin') {
+    sections.push({ title: 'Cadastros', items: [
+      { icon: '🏢', label: 'Condomínios',  page: 'condominios' },
+      { icon: '👷', label: 'Funcionários', page: 'funcionarios' },
+      { icon: '👤', label: 'Síndicos',     page: 'sindicos' },
+    ]});
+  }
+
+  sections.forEach(sec => {
+    const t = document.createElement('div');
+    t.className = 'nav-section-title';
+    t.textContent = sec.title;
+    nav.appendChild(t);
+    sec.items.forEach(item => {
+      const d = document.createElement('div');
+      d.className = 'nav-item';
+      d.dataset.page = item.page;
+      d.innerHTML = `<span class="nav-icon">${item.icon}</span><span>${item.label}</span>`;
+      d.onclick = () => navigateTo(item.page);
+      nav.appendChild(d);
+    });
+  });
+}
+
+function navigateTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('pg-' + page);
+  if (pg) pg.classList.add('active');
+  const ni = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (ni) ni.classList.add('active');
+
+  const titles = {
+    'dashboard': 'Dashboard', 'nova-vistoria': 'Nova Vistoria',
+    'minhas-vistorias': 'Minhas Vistorias', 'relatorio': 'Relatório',
+    'todas-vistorias': 'Todas as Vistorias', 'funcionarios': 'Funcionários',
+    'sindicos': 'Síndicos', 'condominios': 'Condomínios',
+  };
+  document.getElementById('topbar-title').textContent = titles[page] || page;
+
+  if (page === 'dashboard')         renderDashboard();
+  if (page === 'nova-vistoria')     prepareNovaVistoria();
+  if (page === 'minhas-vistorias')  renderMinhasVistorias();
+  if (page === 'relatorio')         renderRelatorio();
+  if (page === 'todas-vistorias')   renderTodasVistorias();
+  if (page === 'funcionarios')      renderFuncionarios();
+  if (page === 'sindicos')          renderSindicos();
+  if (page === 'condominios')       renderCondominios();
+}
+
+function startClock() {
+  const el = document.getElementById('topbar-datetime');
+  setInterval(() => { el.textContent = new Date().toLocaleString('pt-BR'); }, 1000);
+}
+
+/* ================================================
+   DASHBOARD
+   ================================================ */
+async function renderDashboard() {
+  loading('dashboard-stats');
+  loading('dashboard-recent');
+  try {
+    const filtros = {};
+    if (currentUser.role === 'funcionario') filtros.userId  = currentUser.id;
+    if (currentUser.role === 'sindico')     filtros.condoId = currentUser.condo_id;
+
+    const vistorias = await DB.Vistorias.listar(filtros);
+    const abertas   = vistorias.filter(v => v.status === 'Aberta').length;
+    const resolvidas= vistorias.filter(v => v.status === 'Resolvida').length;
+
+    let statsHtml = `
+      <div class="stat-card blue">  <span class="stat-icon">📋</span><div><div class="stat-val">${vistorias.length}</div><div class="stat-lbl">Total de Vistorias</div></div></div>
+      <div class="stat-card orange"><span class="stat-icon">⏳</span><div><div class="stat-val">${abertas}</div><div class="stat-lbl">Em Aberto</div></div></div>
+      <div class="stat-card green"> <span class="stat-icon">✅</span><div><div class="stat-val">${resolvidas}</div><div class="stat-lbl">Resolvidas</div></div></div>
+    `;
+
+    if (currentUser.role === 'admin') {
+      const users  = await DB.Usuarios.listar();
+      const condos = await DB.Condominios.listar();
+      statsHtml += `
+        <div class="stat-card purple"><span class="stat-icon">👷</span><div><div class="stat-val">${users.filter(u=>u.role==='funcionario').length}</div><div class="stat-lbl">Funcionários</div></div></div>
+        <div class="stat-card blue"> <span class="stat-icon">🏢</span><div><div class="stat-val">${condos.length}</div><div class="stat-lbl">Condomínios</div></div></div>
+      `;
+    }
+
+    document.getElementById('dashboard-stats').innerHTML = statsHtml;
+
+    const recentes = vistorias.slice(0, 5);
+    document.getElementById('dashboard-recent').innerHTML = recentes.length
+      ? recentes.map(v => vistoriaCardHtml(v, false)).join('')
+      : '<p class="text-muted text-sm">Nenhuma vistoria registrada ainda.</p>';
+  } catch(e) {
+    document.getElementById('dashboard-stats').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar dados.</div>';
+  }
+}
+
+/* ================================================
+   NOVA VISTORIA
+   ================================================ */
+async function prepareNovaVistoria() {
+  uploadedFiles  = [];
+  uploadedPhotos = [];
+  document.getElementById('nv-photo-preview').innerHTML = '';
+  document.getElementById('nv-desc').value  = '';
+  document.getElementById('nv-local').value = '';
+
+  const condos = await DB.Condominios.listarAtivos();
+  const sel = document.getElementById('nv-condo');
+  const filtrados = currentUser.condo_id
+    ? condos.filter(c => c.id === currentUser.condo_id)
+    : condos;
+  sel.innerHTML = filtrados.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+}
+
+function handlePhotoUpload(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(f => {
+    uploadedFiles.push(f);
+    const reader = new FileReader();
+    reader.onload = ev => {
+      uploadedPhotos.push({ preview: ev.target.result, file: f });
+      renderPhotoPreview();
+    };
+    reader.readAsDataURL(f);
+  });
+  e.target.value = '';
+}
+
+function renderPhotoPreview() {
+  document.getElementById('nv-photo-preview').innerHTML = uploadedPhotos.map((p, i) => `
+    <div class="photo-preview-item">
+      <img src="${p.preview}" onclick="openLightbox('${p.preview}')"/>
+      <span class="photo-remove" onclick="removePhoto(${i})">✕</span>
+    </div>
+  `).join('');
+}
+
+function removePhoto(i) {
+  uploadedPhotos.splice(i, 1);
+  uploadedFiles.splice(i, 1);
+  renderPhotoPreview();
+}
+
+async function salvarVistoria() {
+  const condoId = document.getElementById('nv-condo').value;
+  const local   = document.getElementById('nv-local').value.trim();
+  const tipo    = document.getElementById('nv-tipo').value;
+  const desc    = document.getElementById('nv-desc').value.trim();
+
+  if (!local || !desc) {
+    showAlert('nova-vistoria-alert', '⚠️ Preencha o local e a descrição.', 'danger');
+    return;
+  }
+
+  const btn = document.querySelector('#pg-nova-vistoria .btn-success');
+  btn.textContent = '⏳ Salvando...';
+  btn.disabled = true;
+
+  try {
+    const condo = await DB.Condominios.porId(condoId);
+
+    // 1. Cria a vistoria primeiro (sem fotos)
+    const nova = await DB.Vistorias.criar({
+      condo_id:   condoId,
+      condo_nome: condo?.nome || '',
+      user_id:    currentUser.id,
+      user_nome:  currentUser.nome,
+      user_cargo: currentUser.cargo || '',
+      tipo, local, descricao: desc,
+      status:     'Aberta',
+      observacao: '',
+      fotos:      [],
+    });
+
+    // 2. Faz upload das fotos (se houver)
+    let fotoUrls = [];
+    if (uploadedFiles.length > 0) {
+      for (const file of uploadedFiles) {
+        try {
+          const { url } = await DB.Storage.uploadFoto(file, condoId, nova.id);
+          fotoUrls.push(url);
+        } catch(e) {
+          console.warn('Erro no upload de foto:', e);
+        }
+      }
+      // 3. Atualiza a vistoria com as URLs das fotos
+      if (fotoUrls.length > 0) {
+        await DB.Vistorias.atualizar(nova.id, { fotos: fotoUrls });
+      }
+    }
+
+    await DB.Logs.registrar('nova_vistoria', { vistoriaId: nova.id, tipo, local }, currentUser.id);
+    showAlert('nova-vistoria-alert', '✅ Vistoria registrada com sucesso!', 'success');
+    limparFormVistoria();
+  } catch(e) {
+    showAlert('nova-vistoria-alert', '❌ Erro ao salvar: ' + e.message, 'danger');
+  } finally {
+    btn.textContent = '💾 Salvar Vistoria';
+    btn.disabled = false;
+  }
+}
+
+function limparFormVistoria() {
+  document.getElementById('nv-local').value = '';
+  document.getElementById('nv-desc').value  = '';
+  document.getElementById('nv-tipo').value  = 'Manutenção';
+  uploadedPhotos = [];
+  uploadedFiles  = [];
+  renderPhotoPreview();
+}
+
+/* ================================================
+   MINHAS VISTORIAS
+   ================================================ */
+async function renderMinhasVistorias() {
+  loading('minhas-vistorias-list');
+  try {
+    const filtros = { userId: currentUser.id };
+    const tipo = document.getElementById('mv-tipo').value;
+    if (tipo) filtros.tipo = tipo;
+
+    let list = await DB.Vistorias.listar(filtros);
+
+    const dtIni = document.getElementById('mv-dt-ini').value;
+    const dtFim = document.getElementById('mv-dt-fim').value;
+    if (dtIni) list = list.filter(v => v.criado_em >= dtIni);
+    if (dtFim) list = list.filter(v => v.criado_em <= dtFim + 'T23:59:59');
+
+    document.getElementById('minhas-vistorias-list').innerHTML = list.length
+      ? list.map(v => vistoriaCardHtml(v, true)).join('')
+      : '<div class="alert alert-info">📭 Nenhuma vistoria encontrada.</div>';
+  } catch(e) {
+    document.getElementById('minhas-vistorias-list').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar.</div>';
+  }
+}
+
+/* ================================================
+   RELATÓRIO
+   ================================================ */
+async function renderRelatorio() {
+  loading('relatorio-list');
+  try {
+    const filtros = {};
+    if (currentUser.role === 'sindico') filtros.condoId = currentUser.condo_id;
+    const tipo   = document.getElementById('rel-tipo').value;
+    const status = document.getElementById('rel-status').value;
+    if (tipo)   filtros.tipo   = tipo;
+    if (status) filtros.status = status;
+
+    let list = await DB.Vistorias.listar(filtros);
+    const dtIni = document.getElementById('rel-dt-ini').value;
+    const dtFim = document.getElementById('rel-dt-fim').value;
+    if (dtIni) list = list.filter(v => v.criado_em >= dtIni);
+    if (dtFim) list = list.filter(v => v.criado_em <= dtFim + 'T23:59:59');
+
+    if (!list.length) {
+      document.getElementById('relatorio-list').innerHTML = '<div class="alert alert-info">📭 Nenhum registro encontrado.</div>';
+      return;
+    }
+
+    const byDate = {};
+    list.forEach(v => {
+      const d = v.criado_em.split('T')[0];
+      if (!byDate[d]) byDate[d] = [];
+      byDate[d].push(v);
+    });
+
+    document.getElementById('relatorio-list').innerHTML = Object.keys(byDate)
+      .sort((a,b) => b.localeCompare(a))
+      .map(d => `
+        <div class="mb-2">
+          <h4 style="color:var(--primary);margin-bottom:.6rem;font-size:.95rem;">
+            📅 ${new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', {weekday:'long', year:'numeric', month:'long', day:'numeric'})}
+            <span class="text-muted text-xs">(${byDate[d].length} registro${byDate[d].length > 1 ? 's' : ''})</span>
+          </h4>
+          ${byDate[d].map(v => vistoriaCardHtml(v, true)).join('')}
+        </div>`).join('');
+  } catch(e) {
+    document.getElementById('relatorio-list').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar.</div>';
+  }
+}
+
+/* ================================================
+   TODAS AS VISTORIAS
+   ================================================ */
+async function renderTodasVistorias() {
+  loading('todas-vistorias-list');
+  try {
+    const filtros = {};
+    if (currentUser.role === 'sindico') filtros.condoId = currentUser.condo_id;
+    const condoF = document.getElementById('tv-condo').value;
+    if (condoF) filtros.condoId = condoF;
+
+    let list = await DB.Vistorias.listar(filtros);
+    const dtIni = document.getElementById('tv-dt-ini').value;
+    const dtFim = document.getElementById('tv-dt-fim').value;
+    if (dtIni) list = list.filter(v => v.criado_em >= dtIni);
+    if (dtFim) list = list.filter(v => v.criado_em <= dtFim + 'T23:59:59');
+
+    // Preencher select condos
+    const condos = await DB.Condominios.listar();
+    const sel = document.getElementById('tv-condo');
+    if (sel.options.length <= 1) {
+      condos.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id; opt.textContent = c.nome;
+        sel.appendChild(opt);
+      });
+    }
+
+    document.getElementById('todas-vistorias-list').innerHTML = list.length
+      ? list.map(v => vistoriaCardHtml(v, true)).join('')
+      : '<div class="alert alert-info">📭 Nenhuma vistoria encontrada.</div>';
+  } catch(e) {
+    document.getElementById('todas-vistorias-list').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar.</div>';
+  }
+}
+
+/* ================================================
+   VISTORIA CARD HTML
+   ================================================ */
+function vistoriaCardHtml(v, showActions) {
+  const dt = new Date(v.criado_em).toLocaleString('pt-BR');
+  const fotos = v.fotos || [];
+  const photosHtml = fotos.length
+    ? `<div class="vistoria-photos">${fotos.map(f => `<img src="${f}" onclick="openLightbox('${f}')" title="Clique para ampliar"/>`).join('')}</div>`
+    : '';
+  const obsHtml = v.observacao
+    ? `<div class="mt-1 text-sm" style="background:#f0fdf4;padding:.6rem .8rem;border-radius:8px;color:#065f46"><strong>📝 Obs.:</strong> ${escHtml(v.observacao)}</div>`
+    : '';
+
+  const canEdit = currentUser.role === 'admin' || currentUser.role === 'sindico' ||
+                  (currentUser.role === 'funcionario' && v.user_id === currentUser.id);
+
+  const actionsHtml = showActions && canEdit ? `
+    <div style="display:flex;gap:.4rem">
+      <button class="btn btn-ghost btn-sm" onclick="openEditVistoria('${v.id}')">✏️ Editar</button>
+      ${currentUser.role === 'admin' ? `<button class="btn btn-danger btn-sm" onclick="excluirVistoria('${v.id}')">🗑️</button>` : ''}
+    </div>
+  ` : '';
+
+  return `
+    <div class="vistoria-card">
+      <div class="vistoria-header">
+        <div class="vistoria-meta">
+          <span style="font-weight:700">${tipoIcon(v.tipo)} ${escHtml(v.tipo)}</span>
+          <span class="badge ${v.status==='Aberta' ? 'badge-aberta' : 'badge-resolvida'}">${v.status}</span>
+          <span class="text-sm text-muted">🏢 ${escHtml(v.condo_nome)}</span>
+          <span class="text-sm text-muted">📍 ${escHtml(v.local)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.7rem;flex-wrap:wrap">
+          <span class="text-xs text-muted">👤 ${escHtml(v.user_nome)} &nbsp;|&nbsp; 🕐 ${dt}</span>
+          ${actionsHtml}
+        </div>
+      </div>
+      <div class="vistoria-body">
+        <div class="vistoria-text">${escHtml(v.descricao)}</div>
+        ${photosHtml}
+        ${obsHtml}
+      </div>
+    </div>
+  `;
+}
+
+/* ================================================
+   EDITAR VISTORIA
+   ================================================ */
+async function openEditVistoria(id) {
+  const v = await DB.Vistorias.porId(id);
+  if (!v) return;
+  document.getElementById('mv-id').value           = id;
+  document.getElementById('mv-local').value        = v.local;
+  document.getElementById('mv-tipo-edit').value    = v.tipo;
+  document.getElementById('mv-desc-edit').value    = v.descricao;
+  document.getElementById('mv-status-edit').value  = v.status;
+  document.getElementById('mv-obs-edit').value     = v.observacao || '';
+  openModal('modal-vistoria-overlay');
+}
+
+async function salvarEdicaoVistoria() {
+  const id = document.getElementById('mv-id').value;
+  try {
+    await DB.Vistorias.atualizar(id, {
+      local:      document.getElementById('mv-local').value,
+      tipo:       document.getElementById('mv-tipo-edit').value,
+      descricao:  document.getElementById('mv-desc-edit').value,
+      status:     document.getElementById('mv-status-edit').value,
+      observacao: document.getElementById('mv-obs-edit').value,
+    });
+    closeModal('modal-vistoria-overlay');
+    const activePage = document.querySelector('.page.active');
+    if (activePage) {
+      const pageId = activePage.id.replace('pg-', '');
+      if (pageId === 'minhas-vistorias')  renderMinhasVistorias();
+      if (pageId === 'relatorio')         renderRelatorio();
+      if (pageId === 'todas-vistorias')   renderTodasVistorias();
+      if (pageId === 'dashboard')         renderDashboard();
+    }
+  } catch(e) {
+    alert('Erro ao salvar: ' + e.message);
+  }
+}
+
+async function excluirVistoria(id) {
+  if (!confirm('Excluir esta vistoria?')) return;
+  await DB.Vistorias.deletar(id);
+  renderTodasVistorias();
+  renderDashboard();
+}
+
+/* ================================================
+   FUNCIONÁRIOS
+   ================================================ */
+async function renderFuncionarios() {
+  loading('tbody-funcionarios');
+  const users  = await DB.Usuarios.listar();
+  const funcs  = users.filter(u => u.role === 'funcionario');
+  const condos = await DB.Condominios.listar();
+
+  document.getElementById('tbody-funcionarios').innerHTML = funcs.map(u => {
+    const condo = condos.find(c => c.id === u.condo_id);
+    return `<tr>
+      <td>${escHtml(u.nome)}</td>
+      <td>${escHtml(u.email)}</td>
+      <td>${escHtml(u.cargo)}</td>
+      <td>${escHtml(condo?.nome || '—')}</td>
+      <td><span class="badge ${u.ativo ? 'badge-resolvida' : 'badge-aberta'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editarUsuario('${u.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirUsuario('${u.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="text-muted text-sm">Nenhum funcionário.</td></tr>';
+}
+
+async function openModalFunc() {
+  document.getElementById('mf-id').value     = '';
+  document.getElementById('mf-nome').value   = '';
+  document.getElementById('mf-email').value  = '';
+  document.getElementById('mf-pass').value   = '';
+  document.getElementById('mf-cargo').value  = 'Porteiro';
+  document.getElementById('mf-status').value = 'Ativo';
+  document.getElementById('modal-func-title').textContent = 'Novo Funcionário';
+
+  const condos = await DB.Condominios.listarAtivos();
+  document.getElementById('mf-condo').innerHTML = condos.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  openModal('modal-func-overlay');
+}
+
+async function salvarFuncionario() {
+  const id     = document.getElementById('mf-id').value;
+  const nome   = document.getElementById('mf-nome').value.trim();
+  const email  = document.getElementById('mf-email').value.trim();
+  const senha  = document.getElementById('mf-pass').value;
+  const cargo  = document.getElementById('mf-cargo').value;
+  const condoId= document.getElementById('mf-condo').value;
+  const ativo  = document.getElementById('mf-status').value === 'Ativo';
+
+  if (!nome || !email) { alert('Preencha nome e email.'); return; }
+
+  if (!id) {
+    // Novo usuário
+    if (!senha) { alert('Digite uma senha.'); return; }
+    const condo = await DB.Condominios.porId(condoId);
+    const result = await Auth.criarUsuario({ nome, email, senha, role: 'funcionario', cargo, condoId, condoNome: condo?.nome || '' });
+    if (!result.ok) { alert('Erro: ' + result.erro); return; }
+  } else {
+    await DB.Usuarios.atualizar(id, { nome, cargo, condo_id: condoId, ativo });
+  }
+
+  closeModal('modal-func-overlay');
+  renderFuncionarios();
+}
+
+/* ================================================
+   SÍNDICOS
+   ================================================ */
+async function renderSindicos() {
+  const users  = await DB.Usuarios.listar();
+  const sinds  = users.filter(u => u.role === 'sindico');
+  const condos = await DB.Condominios.listar();
+
+  document.getElementById('tbody-sindicos').innerHTML = sinds.map(u => {
+    const condo = condos.find(c => c.id === u.condo_id);
+    return `<tr>
+      <td>${escHtml(u.nome)}</td>
+      <td>${escHtml(u.email)}</td>
+      <td>${escHtml(condo?.nome || '—')}</td>
+      <td><span class="badge ${u.ativo ? 'badge-resolvida' : 'badge-aberta'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editarUsuario('${u.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirUsuario('${u.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="text-muted text-sm">Nenhum síndico.</td></tr>';
+}
+
+async function openModalSindico() {
+  document.getElementById('ms-id').value     = '';
+  document.getElementById('ms-nome').value   = '';
+  document.getElementById('ms-email').value  = '';
+  document.getElementById('ms-pass').value   = '';
+  document.getElementById('ms-status').value = 'Ativo';
+  document.getElementById('modal-sindico-title').textContent = 'Novo Síndico';
+
+  const condos = await DB.Condominios.listarAtivos();
+  document.getElementById('ms-condo').innerHTML = condos.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  openModal('modal-sindico-overlay');
+}
+
+async function salvarSindico() {
+  const id     = document.getElementById('ms-id').value;
+  const nome   = document.getElementById('ms-nome').value.trim();
+  const email  = document.getElementById('ms-email').value.trim();
+  const senha  = document.getElementById('ms-pass').value;
+  const condoId= document.getElementById('ms-condo').value;
+  const ativo  = document.getElementById('ms-status').value === 'Ativo';
+
+  if (!nome || !email) { alert('Preencha nome e email.'); return; }
+
+  if (!id) {
+    if (!senha) { alert('Digite uma senha.'); return; }
+    const condo = await DB.Condominios.porId(condoId);
+    const result = await Auth.criarUsuario({ nome, email, senha, role: 'sindico', cargo: 'Síndico', condoId, condoNome: condo?.nome || '' });
+    if (!result.ok) { alert('Erro: ' + result.erro); return; }
+  } else {
+    await DB.Usuarios.atualizar(id, { nome, condo_id: condoId, ativo });
+  }
+
+  closeModal('modal-sindico-overlay');
+  renderSindicos();
+}
+
+/* ================================================
+   CONDOMÍNIOS
+   ================================================ */
+async function renderCondominios() {
+  const condos = await DB.Condominios.listar();
+  document.getElementById('tbody-condominios').innerHTML = condos.map(c => `
+    <tr>
+      <td>${escHtml(c.nome)}</td>
+      <td>${escHtml(c.endereco || '—')}</td>
+      <td>${c.unidades || 0}</td>
+      <td><span class="badge ${c.status==='Ativo' ? 'badge-resolvida' : 'badge-aberta'}">${c.status}</span></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editarCondo('${c.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirCondo('${c.id}')">🗑️</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="5" class="text-muted text-sm">Nenhum condomínio.</td></tr>';
+}
+
+function openModalCondo() {
+  document.getElementById('mc-id').value       = '';
+  document.getElementById('mc-nome').value     = '';
+  document.getElementById('mc-end').value      = '';
+  document.getElementById('mc-cidade').value   = '';
+  document.getElementById('mc-unidades').value = '';
+  document.getElementById('mc-status').value   = 'Ativo';
+  document.getElementById('modal-condo-title').textContent = 'Novo Condomínio';
+  openModal('modal-condo-overlay');
+}
+
+async function editarCondo(id) {
+  const c = await DB.Condominios.porId(id);
+  if (!c) return;
+  document.getElementById('mc-id').value       = c.id;
+  document.getElementById('mc-nome').value     = c.nome;
+  document.getElementById('mc-end').value      = c.endereco || '';
+  document.getElementById('mc-cidade').value   = c.cidade   || '';
+  document.getElementById('mc-unidades').value = c.unidades || '';
+  document.getElementById('mc-status').value   = c.status;
+  document.getElementById('modal-condo-title').textContent = 'Editar Condomínio';
+  openModal('modal-condo-overlay');
+}
+
+async function salvarCondo() {
+  const id       = document.getElementById('mc-id').value;
+  const nome     = document.getElementById('mc-nome').value.trim();
+  const endereco = document.getElementById('mc-end').value.trim();
+  const cidade   = document.getElementById('mc-cidade').value.trim();
+  const unidades = parseInt(document.getElementById('mc-unidades').value) || 0;
+  const status   = document.getElementById('mc-status').value;
+
+  if (!nome) { alert('Digite o nome do condomínio.'); return; }
+
+  const slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+
+  if (id) {
+    await DB.Condominios.atualizar(id, { nome, endereco, cidade, unidades, status });
+  } else {
+    await DB.Condominios.criar({ nome, endereco, cidade, unidades, status, slug });
+  }
+
+  closeModal('modal-condo-overlay');
+  renderCondominios();
+}
+
+async function excluirCondo(id) {
+  if (!confirm('Excluir este condomínio?')) return;
+  await DB.Condominios.deletar(id);
+  renderCondominios();
+}
+
+async function excluirUsuario(id) {
+  if (!confirm('Excluir este usuário?')) return;
+  await DB.Usuarios.deletar(id);
+  renderFuncionarios();
+  renderSindicos();
+}
+
+async function editarUsuario(id) {
+  alert('Para editar, use o painel Admin.');
+}
+
+/* ================================================
+   EXPOR FUNÇÕES GLOBAIS
+   ================================================ */
+window.doLogin            = doLogin;
+window.doLogout           = doLogout;
+window.navigateTo         = navigateTo;
+window.openLightbox       = openLightbox;
+window.closeLightbox      = closeLightbox;
+window.handlePhotoUpload  = handlePhotoUpload;
+window.removePhoto        = removePhoto;
+window.salvarVistoria     = salvarVistoria;
+window.limparFormVistoria = limparFormVistoria;
+window.renderMinhasVistorias = renderMinhasVistorias;
+window.renderRelatorio    = renderRelatorio;
+window.renderTodasVistorias  = renderTodasVistorias;
+window.openEditVistoria   = openEditVistoria;
+window.salvarEdicaoVistoria  = salvarEdicaoVistoria;
+window.excluirVistoria    = excluirVistoria;
+window.openModalFunc      = openModalFunc;
+window.salvarFuncionario  = salvarFuncionario;
+window.openModalSindico   = openModalSindico;
+window.salvarSindico      = salvarSindico;
+window.openModalCondo     = openModalCondo;
+window.editarCondo        = editarCondo;
+window.salvarCondo        = salvarCondo;
+window.excluirCondo       = excluirCondo;
+window.excluirUsuario     = excluirUsuario;
+window.closeModal         = closeModal;
+window.doLogout           = doLogout;
+
+</script>
+</body>
+</html>

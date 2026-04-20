@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://esm.sh;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+  font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+  connect-src 'self' https://*.supabase.co https://vhagsqyuuqbltfrtnbtx.supabase.co;
+  img-src 'self' data: blob: https:;
+  frame-src 'none';
+">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portal de Vistorias</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:   #4f46e5; --primary-d: #3730a3; --p-light: #eef2ff;
+      --secondary: #7c3aed; --success:   #059669; --danger:  #dc2626;
+      --warning:   #d97706; --bg:        #f1f5f9; --card:    #ffffff;
+      --text:      #0f172a; --muted:     #64748b; --border:  #e2e8f0;
+      --radius:    12px;    --shadow:    0 2px 16px rgba(0,0,0,.08);
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+    .hidden   { display: none !important; }
+    .flex     { display: flex; } .flex-col { flex-direction: column; }
+    .gap-1    { gap: .5rem; }   .gap-2    { gap: 1rem; }
+    .items-center { align-items: center; } .justify-between { justify-content: space-between; }
+    .w-full   { width: 100%; }
+    .text-sm  { font-size: .85rem; } .text-xs { font-size: .75rem; }
+    .text-muted { color: var(--muted); } .bold { font-weight: 700; }
+    .mt-1 { margin-top: .5rem; } .mt-2 { margin-top: 1rem; }
+    .mb-1 { margin-bottom: .5rem; } .mb-2 { margin-bottom: 1rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .badge { display: inline-flex; align-items: center; gap: .25rem; padding: .2rem .65rem; border-radius: 999px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+    .badge-green  { background: #d1fae5; color: #065f46; }
+    .badge-red    { background: #fee2e2; color: #991b1b; }
+    .badge-blue   { background: #dbeafe; color: #1e3a8a; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; padding: .55rem 1.2rem; border: none; border-radius: var(--radius); font-size: .88rem; font-weight: 600; cursor: pointer; transition: filter .15s, transform .1s; }
+    .btn:hover  { filter: brightness(.92); } .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger  { background: var(--danger);  color: #fff; }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-ghost   { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+    .btn-sm      { padding: .35rem .8rem; font-size: .8rem; border-radius: 8px; }
+    .btn-fab { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 200; width: 58px; height: 58px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 1.6rem; box-shadow: 0 6px 24px rgba(79,70,229,.45); border: none; cursor: pointer; transition: transform .2s, box-shadow .2s; display:flex; align-items:center; justify-content:center; }
+    .btn-fab:hover  { transform: scale(1.08); } .btn-fab:active { transform: scale(.96); }
+
+    .form-group { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+    .form-group label { font-size: .82rem; font-weight: 600; color: #374151; }
+    .form-control { padding: .6rem .9rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; background: #fafafa; transition: border-color .2s, box-shadow .2s; width: 100%; }
+    .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.12); background: #fff; }
+    textarea.form-control { resize: vertical; min-height: 90px; }
+    .required { color: #dc2626; }
+
+    .alert { padding: .8rem 1.1rem; border-radius: 10px; font-size: .88rem; margin-bottom: 1rem; display: flex; align-items: center; gap: .6rem; }
+    .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+    .alert-danger  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-info    { background: #dbeafe; color: #1e3a8a; border: 1px solid #93c5fd; }
+    .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+
+    /* LOGIN */
+    #page-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); }
+    .login-wrap  { width: 100%; max-width: 440px; }
+    .login-header { text-align: center; margin-bottom: 1.5rem; animation: fadeDown .5s ease; }
+    .login-emoji  { font-size: 4rem; display: block; margin-bottom: .5rem; filter: drop-shadow(0 4px 12px rgba(0,0,0,.2)); }
+    .login-title  { color: #fff; font-size: 1.7rem; font-weight: 900; line-height: 1.2; }
+    .login-sub    { color: rgba(255,255,255,.8); font-size: .9rem; margin-top: .3rem; }
+    .login-card   { background: #fff; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.25); padding: 2rem; animation: fadeUp .5s ease; }
+    .login-role-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; background: #f1f5f9; border-radius: 10px; padding: .3rem; }
+    .role-tab { flex: 1; padding: .5rem; text-align: center; cursor: pointer; border-radius: 8px; font-size: .85rem; font-weight: 600; color: var(--muted); border: none; background: none; transition: all .2s; }
+    .role-tab.active { background: #fff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:none; } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:none; } }
+
+    /* TOPBAR */
+    #topbar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: .8rem 1.2rem; background: var(--primary); box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+    .topbar-brand { display: flex; align-items: center; gap: .7rem; }
+    .topbar-emoji { width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+    .topbar-name  { color: #fff; font-weight: 800; font-size: .95rem; line-height: 1.2; }
+    .topbar-sub   { color: rgba(255,255,255,.75); font-size: .72rem; }
+    .topbar-right { display: flex; align-items: center; gap: .7rem; }
+    .topbar-user  { display: flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.15); border-radius: 999px; padding: .35rem .8rem .35rem .4rem; }
+    .topbar-avatar { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.3); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .8rem; flex-shrink: 0; }
+    .topbar-user-name { color: #fff; font-size: .82rem; font-weight: 600; }
+    .topbar-user-role { color: rgba(255,255,255,.7); font-size: .68rem; }
+    .topbar-btn-logout { background: rgba(255,255,255,.2); border: none; color: #fff; padding: .35rem .75rem; border-radius: 8px; cursor: pointer; font-size: .8rem; font-weight: 600; transition: background .15s; }
+    .topbar-btn-logout:hover { background: rgba(255,255,255,.35); }
+
+    /* BOTTOM NAV */
+    #bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 99; display: none; background: #fff; border-top: 1px solid var(--border); padding: .4rem 0 .5rem; box-shadow: 0 -4px 16px rgba(0,0,0,.08); }
+    .bnav-items { display: flex; justify-content: space-around; }
+    .bnav-item  { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .3rem .8rem; cursor: pointer; border: none; background: none; color: var(--muted); font-size: .65rem; font-weight: 600; border-radius: 10px; transition: color .15s; }
+    .bnav-item .bnav-icon { font-size: 1.2rem; }
+    .bnav-item.active { color: var(--primary); }
+    .bnav-badge { position: absolute; top: 0; right: 0; background: #dc2626; color: #fff; font-size: .58rem; font-weight: 800; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+    /* SIDEBAR DESKTOP */
+    #sidebar { width: 230px; min-height: calc(100vh - 53px); background: #fff; border-right: 1px solid var(--border); padding: 1rem 0; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto; flex-shrink: 0; }
+    .sb-section { padding: .3rem .9rem .1rem; font-size: .68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-top: .6rem; }
+    .sb-item { display: flex; align-items: center; gap: .7rem; padding: .65rem 1rem; cursor: pointer; color: var(--text); font-size: .87rem; font-weight: 500; border-left: 3px solid transparent; transition: all .15s; position: relative; }
+    .sb-item:hover  { background: var(--p-light); color: var(--primary); }
+    .sb-item.active { background: var(--p-light); color: var(--primary); border-left-color: var(--primary); font-weight: 700; }
+    .sb-icon  { font-size: 1rem; width: 1.3rem; text-align: center; flex-shrink: 0; }
+    .sb-count { margin-left: auto; background: var(--primary); color: #fff; font-size: .65rem; font-weight: 800; padding: .1rem .45rem; border-radius: 999px; }
+    .sb-count.orange { background: var(--warning); }
+
+    /* LAYOUT */
+    #app      { display: flex; flex-direction: column; min-height: 100vh; }
+    #app-body { display: flex; flex: 1; }
+    #content  { flex: 1; padding: 1.5rem; max-width: 900px; }
+
+    /* PAGES */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* DASHBOARD */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: .8rem; margin-bottom: 1.2rem; }
+    .stat-mini { background: var(--card); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); text-align: center; border-top: 3px solid transparent; transition: transform .2s; }
+    .stat-mini:hover { transform: translateY(-2px); }
+    .stat-mini .s-val { font-size: 1.7rem; font-weight: 800; line-height: 1; }
+    .stat-mini .s-lbl { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    /* VISTORIA CARD */
+    .vist-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); margin-bottom: 1rem; transition: box-shadow .2s, transform .2s; }
+    .vist-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.1); transform: translateY(-1px); }
+    .vist-card-header { padding: .8rem 1.1rem; display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; border-bottom: 1px solid var(--border); background: #fafafa; }
+    .vist-tipo-icon { font-size: 1.3rem; }
+    .vist-tipo-lbl  { font-weight: 700; font-size: .9rem; }
+    .vist-local     { font-size: .8rem; color: var(--muted); }
+    .vist-meta      { margin-left: auto; display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+    .vist-card-body { padding: .9rem 1.1rem; }
+    .vist-desc      { font-size: .88rem; color: var(--text); line-height: 1.6; }
+    .vist-obs       { margin-top: .6rem; background: #d1fae5; border-radius: 8px; padding: .5rem .8rem; font-size: .82rem; color: #065f46; }
+    .vist-card-footer { padding: .7rem 1.1rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; background: #fafafa; }
+    .vist-author { display: flex; align-items: center; gap: .4rem; font-size: .78rem; color: var(--muted); }
+    .vist-author-avatar { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: .7rem; font-weight: 800; flex-shrink: 0; }
+    .vist-fotos { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .6rem; }
+    .vist-foto  { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 2px solid var(--border); transition: transform .2s, border-color .2s; }
+    .vist-foto:hover { transform: scale(1.05); border-color: var(--primary); }
+
+    /* FILTROS */
+    .filter-bar { background: var(--card); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); margin-bottom: 1rem; }
+    .filter-bar-inner { display: flex; gap: .7rem; flex-wrap: wrap; align-items: flex-end; }
+    .filter-bar .form-group { margin: 0; min-width: 120px; flex: 1; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; z-index: 999; padding: 0; }
+    @media (min-width: 640px) { .modal-overlay { align-items: center; padding: 1rem; } }
+    .modal { background: #fff; border-radius: 20px 20px 0 0; width: 100%; max-width: 560px; max-height: 95vh; overflow-y: auto; box-shadow: 0 -8px 40px rgba(0,0,0,.2); animation: slideUp .3s ease; }
+    @media (min-width: 640px) { .modal { border-radius: 16px; animation: fadeIn .25s ease; } }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: none; } }
+    .modal-header { padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 1; }
+    .modal-header h3 { font-size: 1rem; font-weight: 800; }
+    .modal-close { cursor: pointer; font-size: 1.3rem; color: var(--muted); border: none; background: none; line-height: 1; }
+    .modal-body   { padding: 1.3rem; }
+    .modal-footer { padding: .9rem 1.3rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: .6rem; position: sticky; bottom: 0; background: #fff; }
+
+    /* UPLOAD */
+    .upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 1.5rem; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; position: relative; }
+    .upload-area:hover { border-color: var(--primary); background: var(--p-light); }
+    .upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+    .upload-preview { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .7rem; }
+    .upload-thumb  { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; border: 2px solid var(--border); }
+    .upload-thumb-wrap { position: relative; display: inline-block; }
+    .upload-thumb-del { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; border-radius: 50%; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: .65rem; cursor: pointer; font-weight: 800; border: 2px solid #fff; z-index: 1; }
+
+    /* LIGHTBOX */
+    #lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.92); display: flex; align-items: center; justify-content: center; z-index: 2000; cursor: zoom-out; }
+    #lightbox img { max-width: 95vw; max-height: 92vh; border-radius: 12px; object-fit: contain; }
+
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: .7rem; }
+    .empty-state h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: .3rem; }
+    .empty-state p  { font-size: .88rem; }
+
+    /* NOTIFICAÇÕES */
+    .notif-item { display: flex; gap: .8rem; align-items: flex-start; padding: .9rem; border-radius: 10px; background: #f8fafc; border: 1px solid var(--border); margin-bottom: .6rem; }
+    .notif-item.unread { background: var(--p-light); border-color: #c7d2fe; }
+    .notif-icon  { font-size: 1.3rem; flex-shrink: 0; margin-top: .1rem; }
+    .notif-title { font-size: .88rem; font-weight: 700; }
+    .notif-sub   { font-size: .78rem; color: var(--muted); margin-top: .15rem; }
+    .notif-time  { font-size: .7rem; color: var(--muted); white-space: nowrap; margin-top: .15rem; }
+
+    /* PERFIL */
+    .profile-header { border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; }
+    .profile-banner { height: 90px; background: linear-gradient(135deg, var(--primary), var(--secondary)); }
+    .profile-info   { background: var(--card); padding: 0 1.5rem 1.5rem; box-shadow: var(--shadow); }
+    .profile-avatar { width: 72px; height: 72px; border-radius: 50%; margin-top: -36px; border: 4px solid #fff; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+    .profile-name { font-size: 1.2rem; font-weight: 800; margin-top: .5rem; }
+    .profile-meta { font-size: .83rem; color: var(--muted); margin-top: .2rem; }
+
+    /* LOADING */
+    .loading-spinner { display: flex; align-items: center; justify-content: center; gap: .5rem; padding: 2rem; color: var(--muted); }
+    .spinner { width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* TOAST */
+    #toast-container { position: fixed; bottom: 5rem; right: 1rem; z-index: 9999; display: flex; flex-direction: column; gap: .5rem; }
+    .toast { background: #1e293b; color: #fff; padding: .7rem 1.1rem; border-radius: 10px; font-size: .85rem; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,.2); display: flex; align-items: center; gap: .5rem; animation: fadeIn .25s ease; min-width: 220px; max-width: 320px; }
+    .toast.success { border-left: 4px solid #059669; }
+    .toast.danger  { border-left: 4px solid #dc2626; }
+    .toast.info    { border-left: 4px solid #0284c7; }
+
+    @media (max-width: 768px) {
+      #sidebar  { display: none; }
+      #bottom-nav { display: block; }
+      #content  { padding: 1rem .75rem; padding-bottom: 5rem; max-width: 100%; }
+      .grid-2   { grid-template-columns: 1fr; }
+      .btn-fab  { bottom: 5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="page-login">
+  <div class="login-wrap">
+    <div class="login-header">
+      <span class="login-emoji" id="login-emoji">🏢</span>
+      <h1 class="login-title" id="login-condo-nome">Carregando...</h1>
+      <p  class="login-sub"   id="login-condo-slogan">Portal de Vistorias</p>
+    </div>
+    <div class="login-card">
+      <div class="login-role-tabs">
+        <button class="role-tab active" onclick="setRole('funcionario', this)">👷 Funcionário</button>
+        <button class="role-tab"        onclick="setRole('sindico',     this)">👤 Síndico</button>
+      </div>
+      <div id="login-alert" class="hidden"></div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="li-user" class="form-control" placeholder="seu@email.com" autocomplete="username"/>
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="li-pass" class="form-control" placeholder="••••••" autocomplete="current-password"/>
+      </div>
+      <button class="btn btn-primary w-full mt-1" id="login-btn" onclick="doLogin()" style="padding:.75rem;font-size:.95rem">
+        🔐 Entrar no Portal
+      </button>
+      <p class="text-xs text-muted mt-2" style="text-align:center" id="login-hint">
+        Use o email e senha cadastrados pelo administrador
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-emoji" id="tb-emoji">🏢</div>
+      <div>
+        <div class="topbar-name" id="tb-nome">Portal</div>
+        <div class="topbar-sub"  id="tb-sub">Vistorias</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="topbar-avatar" id="tb-avatar">?</div>
+        <div style="display:flex;flex-direction:column">
+          <span class="topbar-user-name" id="tb-user-nome">Usuário</span>
+          <span class="topbar-user-role" id="tb-user-role">—</span>
+        </div>
+      </div>
+      <button class="topbar-btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div id="app-body">
+
+    <!-- SIDEBAR DESKTOP -->
+    <nav id="sidebar">
+      <div class="sb-section">Principal</div>
+      <div class="sb-item active" onclick="goTo('dashboard')" data-page="dashboard"><span class="sb-icon">🏠</span> Início</div>
+      <div class="sb-item" onclick="goTo('vistorias')" data-page="vistorias">
+        <span class="sb-icon">📋</span> Vistorias
+        <span class="sb-count orange" id="sb-abertas">0</span>
+      </div>
+      <div class="sb-section" id="sb-sec-sind" style="display:none">Gestão</div>
+      <div class="sb-item hidden" id="sb-relatorios" onclick="goTo('relatorios')" data-page="relatorios"><span class="sb-icon">📊</span> Relatórios</div>
+      <div class="sb-item hidden" id="sb-equipe"     onclick="goTo('equipe')"    data-page="equipe">    <span class="sb-icon">👥</span> Equipe</div>
+      <div class="sb-section">Conta</div>
+      <div class="sb-item" onclick="goTo('notificacoes')" data-page="notificacoes">
+        <span class="sb-icon">🔔</span> Notificações
+        <span class="sb-count" id="sb-notif-count" style="display:none">0</span>
+      </div>
+      <div class="sb-item" onclick="goTo('perfil')" data-page="perfil"><span class="sb-icon">👤</span> Meu Perfil</div>
+    </nav>
+
+    <!-- CONTENT -->
+    <div id="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="pg-dashboard">
+        <div class="stats-row" id="stats-row"></div>
+        <div class="card mb-2" id="dash-boas-vindas"></div>
+        <h3 class="mb-1" style="font-size:.95rem">📋 Últimas Vistorias</h3>
+        <div id="dash-ultimas"></div>
+      </div>
+
+      <!-- VISTORIAS -->
+      <div class="page" id="pg-vistorias">
+        <div class="filter-bar">
+          <div class="filter-bar-inner">
+            <div class="form-group"><label>Status</label>
+              <select id="f-status" class="form-control">
+                <option value="">Todos</option><option>Aberta</option><option>Resolvida</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Tipo</label>
+              <select id="f-tipo" class="form-control">
+                <option value="">Todos</option>
+                <option>Manutenção</option><option>Segurança</option><option>Limpeza</option>
+                <option>Infra-estrutura</option><option>Ocorrência</option><option>Rotina</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Data Início</label><input type="date" id="f-dt-ini" class="form-control"/></div>
+            <div class="form-group"><label>Data Fim</label><input type="date" id="f-dt-fim" class="form-control"/></div>
+            <button class="btn btn-primary btn-sm" onclick="renderVistorias()" style="height:38px;align-self:flex-end">🔍</button>
+            <button class="btn btn-ghost   btn-sm" onclick="limparFiltros()"   style="height:38px;align-self:flex-end">✕</button>
+          </div>
+        </div>
+        <div id="vist-list"></div>
+      </div>
+
+      <!-- RELATÓRIOS (síndico) -->
+      <div class="page" id="pg-relatorios">
+        <div class="stats-row" id="rel-stats"></div>
+        <div class="grid-2 gap-2">
+          <div class="card"><h3 class="mb-2" style="font-size:.92rem">📊 Por Tipo</h3><div id="rel-por-tipo"></div></div>
+          <div class="card"><h3 class="mb-2" style="font-size:.92rem">👷 Por Funcionário</h3><div id="rel-por-func"></div></div>
+        </div>
+        <div class="card mt-2">
+          <h3 class="mb-2" style="font-size:.92rem">📅 Últimos 7 dias</h3>
+          <div id="rel-por-dia"></div>
+        </div>
+      </div>
+
+      <!-- EQUIPE (síndico) -->
+      <div class="page" id="pg-equipe"><div id="equipe-list"></div></div>
+
+      <!-- NOTIFICAÇÕES -->
+      <div class="page" id="pg-notificacoes">
+        <div class="flex justify-between items-center mb-2">
+          <h3 style="font-size:.95rem">🔔 Notificações</h3>
+          <button class="btn btn-ghost btn-sm" onclick="marcarTodasLidas()">✓ Marcar todas como lidas</button>
+        </div>
+        <div id="notif-list"></div>
+      </div>
+
+      <!-- PERFIL -->
+      <div class="page" id="pg-perfil">
+        <div class="profile-header card" style="padding:0">
+          <div class="profile-banner" id="perfil-banner"></div>
+          <div class="profile-info">
+            <div class="profile-avatar" id="perfil-avatar">?</div>
+            <div class="profile-name" id="perfil-nome">—</div>
+            <div class="profile-meta" id="perfil-meta">—</div>
+          </div>
+        </div>
+        <div class="grid-2 gap-2">
+          <div class="card">
+            <h3 class="mb-2" style="font-size:.92rem">📋 Informações</h3>
+            <div id="perfil-info"></div>
+          </div>
+          <div class="card">
+            <h3 class="mb-2" style="font-size:.92rem">🔒 Alterar Senha</h3>
+            <div class="form-group"><label>Nova Senha</label><input type="password" id="p-nova" class="form-control"/></div>
+            <div class="form-group"><label>Confirmar</label> <input type="password" id="p-conf" class="form-control"/></div>
+            <button class="btn btn-success btn-sm" onclick="alterarSenha()">🔒 Alterar</button>
+            <div id="senha-alert" class="hidden mt-1"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /app-body -->
+
+  <!-- BOTTOM NAV MOBILE -->
+  <div id="bottom-nav">
+    <div class="bnav-items">
+      <button class="bnav-item active" onclick="goTo('dashboard')" data-bnav="dashboard"><span class="bnav-icon">🏠</span> Início</button>
+      <button class="bnav-item" onclick="goTo('vistorias')" data-bnav="vistorias" style="position:relative">
+        <span class="bnav-icon">📋</span> Vistorias
+        <span class="bnav-badge hidden" id="bn-abertas">0</span>
+      </button>
+      <button class="bnav-item hidden" id="bn-relatorios" onclick="goTo('relatorios')" data-bnav="relatorios"><span class="bnav-icon">📊</span> Relatórios</button>
+      <button class="bnav-item" onclick="goTo('notificacoes')" data-bnav="notificacoes" style="position:relative">
+        <span class="bnav-icon">🔔</span> Alertas
+        <span class="bnav-badge hidden" id="bn-notif">0</span>
+      </button>
+      <button class="bnav-item" onclick="goTo('perfil')" data-bnav="perfil"><span class="bnav-icon">👤</span> Perfil</button>
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <button class="btn-fab hidden" id="btn-fab" onclick="openModalVistoria()" title="Nova Vistoria">＋</button>
+
+</div>
+
+<!-- MODAL: NOVA / EDITAR VISTORIA -->
+<div class="modal-overlay hidden" id="modal-vist">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="mv-title">📋 Nova Vistoria</h3>
+      <button class="modal-close" onclick="closeModal('modal-vist')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mv-id"/>
+      <div class="form-group"><label>Local / Área <span class="required">*</span></label><input type="text" id="mv-local" class="form-control" placeholder="Ex: Portaria, Garagem B…"/></div>
+      <div class="grid-2">
+        <div class="form-group"><label>Tipo <span class="required">*</span></label>
+          <select id="mv-tipo" class="form-control">
+            <option>Manutenção</option><option>Segurança</option><option>Limpeza</option>
+            <option>Infra-estrutura</option><option>Ocorrência</option><option>Rotina</option><option>Outro</option>
+          </select>
+        </div>
+        <div class="form-group" id="mv-status-group" style="display:none"><label>Status</label>
+          <select id="mv-status" class="form-control"><option>Aberta</option><option>Resolvida</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Descrição <span class="required">*</span></label><textarea id="mv-desc" class="form-control" placeholder="Descreva detalhadamente…"></textarea></div>
+      <div class="form-group" id="mv-obs-group" style="display:none"><label>Observação / Resolução</label><textarea id="mv-obs" class="form-control"></textarea></div>
+      <div class="form-group">
+        <label>Fotos</label>
+        <div class="upload-area" id="upload-area">
+          <input type="file" id="mv-fotos" accept="image/*" multiple onchange="previewFotos(this)"/>
+          <div style="pointer-events:none">
+            <div style="font-size:1.8rem">📷</div>
+            <div class="text-sm bold mt-1">Clique ou arraste fotos aqui</div>
+            <div class="text-xs text-muted mt-1">JPG, PNG, WEBP · Máx. 5MB cada</div>
+          </div>
+        </div>
+        <div class="upload-preview" id="upload-preview"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-vist')">Cancelar</button>
+      <button class="btn btn-primary" id="mv-save-btn" onclick="salvarVistoria()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RESOLVER (síndico) -->
+<div class="modal-overlay hidden" id="modal-resolver">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✅ Resolver Vistoria</h3>
+      <button class="modal-close" onclick="closeModal('modal-resolver')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mr-id"/>
+      <div id="mr-info" class="alert alert-info mb-2"></div>
+      <div class="form-group"><label>Como foi resolvido</label><textarea id="mr-obs" class="form-control" placeholder="Descreva a resolução…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-resolver')">Cancelar</button>
+      <button class="btn btn-success" onclick="confirmarResolver()">✅ Marcar como Resolvida</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" class="hidden" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="foto"/>
+</div>
+
+<!-- TOASTS -->
+<div id="toast-container"></div>
+
+<script type="module">
+import { Auth, DB } from './supabase.js';
+
+/* ============================================================
+   ESTADO GLOBAL
+   ============================================================ */
+let CONDO       = null;
+let currentUser = null;
+let loginRole   = 'funcionario';
+let fotosNovas  = [];   // { file: File, preview: string, url: string|null }
+let vistoriaEditId = null;
+
+/* ============================================================
+   UTILITÁRIOS
+   ============================================================ */
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function tipoIcon(tipo) {
+  return {'Manutenção':'🔧','Segurança':'🔒','Limpeza':'🧹','Infra-estrutura':'🏗️','Ocorrência':'⚠️','Rotina':'📋','Outro':'📌'}[tipo]||'📌';
+}
+
+function roleLbl(role) {
+  return { admin:'Administrador', sindico:'Síndico', funcionario:'Funcionário' }[role] || role;
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `alert alert-${type}`;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.remove('hidden');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.add('hidden'); }
+
+function toast(msg, type = 'success') {
+  const wrap = document.getElementById('toast-container');
+  const t    = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 4000);
+}
+
+function loading(id) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div> Carregando...</div>';
+}
+
+function emptyState(title, sub='') {
+  return `<div class="empty-state"><div class="empty-icon">📭</div><h3>${title}</h3>${sub?`<p>${sub}</p>`:''}</div>`;
+}
+
+function applyTheme(cor, cor2) {
+  const root = document.documentElement;
+  root.style.setProperty('--primary',   cor  || '#4f46e5');
+  root.style.setProperty('--secondary', cor2 || '#7c3aed');
+  root.style.setProperty('--p-light',   (cor || '#4f46e5') + '18');
+}
+
+/* ============================================================
+   DETECÇÃO DO CONDOMÍNIO
+   ============================================================ */
+async function detectarCondo() {
+  const params   = new URLSearchParams(window.location.search);
+  const slug     = params.get('condo') || params.get('slug') ||
+                   window.location.hash.replace('#','') || null;
+
+  if (slug) {
+    CONDO = await DB.Condominios.porSlug(slug);
+  }
+  if (!CONDO) {
+    const todos = await DB.Condominios.listarAtivos();
+    CONDO = todos[0] || null;
+  }
+
+  if (CONDO) {
+    applyTheme(CONDO.cor, CONDO.cor2);
+    document.title = `Portal — ${CONDO.nome}`;
+    document.getElementById('login-emoji').textContent       = CONDO.emoji  || '🏢';
+    document.getElementById('login-condo-nome').textContent   = CONDO.nome;
+    document.getElementById('login-condo-slogan').textContent = CONDO.slogan || 'Portal de Vistorias';
+  } else {
+    document.getElementById('login-condo-nome').textContent    = 'Condomínio não encontrado';
+    document.getElementById('login-condo-slogan').textContent  = '';
+    document.getElementById('login-hint').textContent = '⚠️ URL inválida ou condomínio inativo.';
+  }
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+function setRole(role, btn) {
+  loginRole = role;
+  document.querySelectorAll('.role-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function doLogin() {
+  if (!CONDO) { showAlert('login-alert','❌ Condomínio não encontrado.','danger'); return; }
+
+  const email = document.getElementById('li-user').value.trim();
+  const senha  = document.getElementById('li-pass').value;
+
+  if (!email || !senha) { showAlert('login-alert','⚠️ Preencha email e senha.','danger'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.textContent = '⏳ Entrando...'; btn.disabled = true;
+
+  const result = await Auth.login(email, senha);
+  btn.textContent = '🔐 Entrar no Portal'; btn.disabled = false;
+
+  if (!result.ok) { showAlert('login-alert','❌ ' + result.erro,'danger'); return; }
+
+  const u = result.usuario;
+  // Validar se o usuário é deste condomínio e tem o role correto
+  if (u.role !== loginRole) {
+    showAlert('login-alert', `❌ Este usuário não é ${loginRole === 'funcionario' ? 'funcionário' : 'síndico'}.`, 'danger');
+    await Auth.logout();
+    return;
+  }
+  if (u.condo_id !== CONDO.id) {
+    showAlert('login-alert', '❌ Usuário não pertence a este condomínio.', 'danger');
+    await Auth.logout();
+    return;
+  }
+  if (!u.ativo) {
+    showAlert('login-alert', '❌ Usuário inativo. Contate o administrador.', 'danger');
+    await Auth.logout();
+    return;
+  }
+
+  currentUser = u;
+  iniciarApp();
+}
+
+async function doLogout() {
+  await Auth.logout();
+  currentUser = null;
+  fotosNovas  = [];
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('page-login').classList.remove('hidden');
+  document.getElementById('li-pass').value = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('page-login').classList.contains('hidden')) doLogin();
+});
+
+/* ============================================================
+   INICIAR APP
+   ============================================================ */
+function iniciarApp() {
+  document.getElementById('page-login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+
+  // Topbar
+  document.getElementById('tb-emoji').textContent    = CONDO.emoji || '🏢';
+  document.getElementById('tb-nome').textContent      = CONDO.nome;
+  document.getElementById('tb-sub').textContent       = CONDO.slogan || 'Portal de Vistorias';
+  document.getElementById('tb-avatar').textContent    = currentUser.nome.charAt(0).toUpperCase();
+  document.getElementById('tb-user-nome').textContent = currentUser.nome;
+  document.getElementById('tb-user-role').textContent = roleLbl(currentUser.role) + (currentUser.cargo ? ' · ' + currentUser.cargo : '');
+
+  // Menus extras para síndico
+  if (currentUser.role === 'sindico') {
+    document.getElementById('sb-sec-sind').style.display   = '';
+    document.getElementById('sb-relatorios').classList.remove('hidden');
+    document.getElementById('sb-equipe').classList.remove('hidden');
+    document.getElementById('bn-relatorios').classList.remove('hidden');
+  }
+
+  // FAB para funcionários
+  if (currentUser.role === 'funcionario') {
+    document.getElementById('btn-fab').classList.remove('hidden');
+  }
+
+  atualizarBadges();
+  gerarNotificacoesIniciais();
+  goTo('dashboard');
+}
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item, .bnav-item').forEach(i => i.classList.remove('active'));
+  const pg = document.getElementById('pg-' + page);
+  if (pg) pg.classList.add('active');
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.querySelector(`[data-bnav="${page}"]`)?.classList.add('active');
+
+  if (page === 'dashboard')    renderDashboard();
+  if (page === 'vistorias')    renderVistorias();
+  if (page === 'relatorios')   renderRelatorios();
+  if (page === 'equipe')       renderEquipe();
+  if (page === 'notificacoes') renderNotificacoes();
+  if (page === 'perfil')       renderPerfil();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+async function atualizarBadges() {
+  try {
+    const vist = await DB.Vistorias.listar({ condoId: CONDO.id });
+    const ab = vist.filter(v => v.status === 'Aberta').length;
+
+    document.getElementById('sb-abertas').textContent = ab;
+    const bn = document.getElementById('bn-abertas');
+    if (ab > 0) { bn.textContent = ab; bn.classList.remove('hidden'); }
+    else bn.classList.add('hidden');
+
+    // Notificações não lidas (localStorage)
+    const notifs = JSON.parse(localStorage.getItem('notif_' + currentUser.id) || '[]');
+    const nLidas = notifs.filter(n => !n.lida).length;
+    const sbN = document.getElementById('sb-notif-count');
+    const bnN = document.getElementById('bn-notif');
+    if (nLidas > 0) {
+      sbN.textContent = nLidas; sbN.style.display = '';
+      bnN.textContent = nLidas; bnN.classList.remove('hidden');
+    } else {
+      sbN.style.display = 'none'; bnN.classList.add('hidden');
+    }
+  } catch(e) { console.warn('badges:', e); }
+}
+
+/* ============================================================
+   NOTIFICAÇÕES (localStorage)
+   ============================================================ */
+function gerarNotificacoesIniciais() {
+  const key = 'notif_' + currentUser.id;
+  if (localStorage.getItem(key)) return;
+  const notifs = [
+    { id: 1, icon: '🎉', title: 'Bem-vindo ao portal!', sub: `Olá, ${currentUser.nome}. Seu acesso está ativo.`, time: new Date().toISOString(), lida: false },
+    { id: 2, icon: '📋', title: 'Sistema online', sub: 'Agora os dados ficam salvos na nuvem.', time: new Date().toISOString(), lida: false },
+  ];
+  localStorage.setItem(key, JSON.stringify(notifs));
+}
+
+function adicionarNotificacao(title, sub, icon = '🔔') {
+  const key   = 'notif_' + currentUser.id;
+  const notifs = JSON.parse(localStorage.getItem(key) || '[]');
+  notifs.unshift({ id: Date.now(), icon, title, sub, time: new Date().toISOString(), lida: false });
+  localStorage.setItem(key, JSON.stringify(notifs.slice(0, 30)));
+  atualizarBadges();
+}
+
+function renderNotificacoes() {
+  const key    = 'notif_' + currentUser.id;
+  const notifs = JSON.parse(localStorage.getItem(key) || '[]');
+  document.getElementById('notif-list').innerHTML = notifs.length
+    ? notifs.map(n => `
+      <div class="notif-item ${n.lida?'':'unread'}">
+        <div class="notif-icon">${n.icon}</div>
+        <div class="notif-text">
+          <div class="notif-title">${esc(n.title)}</div>
+          <div class="notif-sub">${esc(n.sub)}</div>
+        </div>
+        <div class="notif-time">${new Date(n.time).toLocaleDateString('pt-BR')}</div>
+      </div>`).join('')
+    : emptyState('Nenhuma notificação', 'Tudo limpo por aqui!');
+}
+
+function marcarTodasLidas() {
+  const key    = 'notif_' + currentUser.id;
+  const notifs = JSON.parse(localStorage.getItem(key) || '[]').map(n => ({ ...n, lida: true }));
+  localStorage.setItem(key, JSON.stringify(notifs));
+  renderNotificacoes();
+  atualizarBadges();
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+async function renderDashboard() {
+  loading('stats-row');
+  loading('dash-ultimas');
+  try {
+    const vist = await getMinhasVistorias();
+    const ab = vist.filter(v => v.status === 'Aberta').length;
+    const rs = vist.filter(v => v.status === 'Resolvida').length;
+    const hj = vist.filter(v => v.criado_em?.startsWith(new Date().toISOString().slice(0,10))).length;
+
+    document.getElementById('stats-row').innerHTML = [
+      { cor:'#6366f1', lbl:'Total',     val: vist.length, icon:'📋' },
+      { cor:'#d97706', lbl:'Em Aberto', val: ab,           icon:'⏳' },
+      { cor:'#059669', lbl:'Resolvidas',val: rs,           icon:'✅' },
+      { cor:'#0284c7', lbl:'Hoje',      val: hj,           icon:'📅' },
+    ].map(s => `
+      <div class="stat-mini" style="border-top-color:${s.cor}">
+        <div class="s-val" style="color:${s.cor}">${s.icon} ${s.val}</div>
+        <div class="s-lbl">${s.lbl}</div>
+      </div>`).join('');
+
+    const hora = new Date().getHours();
+    const saud = hora < 12 ? '☀️ Bom dia' : hora < 18 ? '🌤️ Boa tarde' : '🌙 Boa noite';
+    document.getElementById('dash-boas-vindas').innerHTML = `
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div style="font-size:2.5rem">${CONDO.emoji||'🏢'}</div>
+        <div>
+          <div style="font-weight:800;font-size:1rem">${saud}, ${currentUser.nome.split(' ')[0]}! 👋</div>
+          <div class="text-sm text-muted">${esc(CONDO.nome)} · ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</div>
+          ${ab > 0
+            ? `<div class="text-sm" style="color:#d97706;font-weight:600;margin-top:.3rem">⏳ ${ab} vistoria${ab>1?'s':''} em aberto</div>`
+            : `<div class="text-sm" style="color:#059669;font-weight:600;margin-top:.3rem">✅ Nenhuma pendência!</div>`}
+        </div>
+      </div>`;
+
+    const ultimas = vist.slice(0, 3);
+    document.getElementById('dash-ultimas').innerHTML = ultimas.length
+      ? ultimas.map(v => vistCardHtml(v, true)).join('')
+      : emptyState('Nenhuma vistoria registrada ainda.', currentUser.role==='funcionario'?'Use o botão ➕ para registrar a primeira.':'');
+  } catch(e) {
+    document.getElementById('stats-row').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar.</div>';
+  }
+}
+
+/* ============================================================
+   VISTORIAS
+   ============================================================ */
+async function getMinhasVistorias() {
+  if (currentUser.role === 'sindico') {
+    return await DB.Vistorias.listar({ condoId: CONDO.id });
+  }
+  return await DB.Vistorias.listar({ condoId: CONDO.id, userId: currentUser.id });
+}
+
+async function renderVistorias() {
+  loading('vist-list');
+  try {
+    const filtros = { condoId: CONDO.id };
+    if (currentUser.role === 'funcionario') filtros.userId = currentUser.id;
+    const fStatus = document.getElementById('f-status')?.value || '';
+    const fTipo   = document.getElementById('f-tipo')?.value   || '';
+    if (fStatus) filtros.status = fStatus;
+    if (fTipo)   filtros.tipo   = fTipo;
+
+    let list = await DB.Vistorias.listar(filtros);
+
+    const dtIni = document.getElementById('f-dt-ini')?.value || '';
+    const dtFim = document.getElementById('f-dt-fim')?.value || '';
+    if (dtIni) list = list.filter(v => v.criado_em >= dtIni);
+    if (dtFim) list = list.filter(v => v.criado_em <= dtFim + 'T23:59:59');
+
+    document.getElementById('vist-list').innerHTML = list.length
+      ? list.map(v => vistCardHtml(v)).join('')
+      : emptyState('Nenhuma vistoria encontrada', 'Tente outros filtros.');
+  } catch(e) {
+    document.getElementById('vist-list').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar.</div>';
+  }
+}
+
+function vistCardHtml(v, mini = false) {
+  const isMeu  = v.user_id === currentUser.id;
+  const isSind = currentUser.role === 'sindico';
+  const cor    = CONDO.cor || '#4f46e5';
+
+  const fotosHtml = (v.fotos && v.fotos.length > 0)
+    ? `<div class="vist-fotos">${v.fotos.map(f => `<img src="${f}" class="vist-foto" onclick="openLightbox('${f}')" alt="foto"/>`).join('')}</div>`
+    : '';
+
+  const acoes = !mini ? `
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+      ${isMeu && v.status==='Aberta' ? `<button class="btn btn-ghost btn-sm" onclick="editarVistoria('${v.id}')">✏️ Editar</button>` : ''}
+      ${isSind && v.status==='Aberta' ? `<button class="btn btn-success btn-sm" onclick="openResolver('${v.id}')">✅ Resolver</button>` : ''}
+      ${isMeu ? `<button class="btn btn-danger btn-sm" onclick="excluirVistoria('${v.id}')">🗑️</button>` : ''}
+    </div>` : '';
+
+  return `
+  <div class="vist-card" id="vc-${v.id}">
+    <div class="vist-card-header">
+      <span class="vist-tipo-icon">${tipoIcon(v.tipo)}</span>
+      <div>
+        <div class="vist-tipo-lbl">${esc(v.tipo)}</div>
+        <div class="vist-local">📍 ${esc(v.local)}</div>
+      </div>
+      <div class="vist-meta">
+        <span class="badge ${v.status==='Aberta'?'badge-yellow':'badge-green'}">${v.status==='Aberta'?'⏳':'✅'} ${v.status}</span>
+        <span class="text-xs text-muted">${new Date(v.criado_em).toLocaleDateString('pt-BR')}</span>
+      </div>
+    </div>
+    <div class="vist-card-body">
+      <p class="vist-desc">${esc(v.descricao||'')}</p>
+      ${fotosHtml}
+      ${v.observacao ? `<div class="vist-obs">📝 <strong>Resolução:</strong> ${esc(v.observacao)}</div>` : ''}
+    </div>
+    <div class="vist-card-footer">
+      <div class="vist-author">
+        <div class="vist-author-avatar" style="background:${cor}">${(v.user_nome||'?').charAt(0)}</div>
+        ${esc(v.user_nome||'')} ${v.user_cargo?'· '+esc(v.user_cargo):''}
+      </div>
+      ${acoes}
+    </div>
+  </div>`;
+}
+
+function limparFiltros() {
+  ['f-status','f-tipo','f-dt-ini','f-dt-fim'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  renderVistorias();
+}
+
+/* ============================================================
+   MODAL VISTORIA
+   ============================================================ */
+function openModalVistoria() {
+  vistoriaEditId = null;
+  fotosNovas     = [];
+  document.getElementById('mv-title').textContent = '📋 Nova Vistoria';
+  document.getElementById('mv-id').value    = '';
+  document.getElementById('mv-local').value = '';
+  document.getElementById('mv-tipo').value  = 'Manutenção';
+  document.getElementById('mv-desc').value  = '';
+  document.getElementById('mv-obs').value   = '';
+  document.getElementById('upload-preview').innerHTML = '';
+  document.getElementById('mv-fotos').value = '';
+  document.getElementById('mv-status-group').style.display = 'none';
+  document.getElementById('mv-obs-group').style.display    = 'none';
+  openModal('modal-vist');
+}
+
+async function editarVistoria(id) {
+  const v = await DB.Vistorias.porId(id);
+  if (!v) return;
+  vistoriaEditId = id;
+  fotosNovas = (v.fotos || []).map(url => ({ file: null, preview: url, url }));
+
+  document.getElementById('mv-title').textContent = '✏️ Editar Vistoria';
+  document.getElementById('mv-id').value     = v.id;
+  document.getElementById('mv-local').value  = v.local;
+  document.getElementById('mv-tipo').value   = v.tipo;
+  document.getElementById('mv-desc').value   = v.descricao || '';
+  document.getElementById('mv-obs').value    = v.observacao || '';
+  document.getElementById('mv-status').value = v.status;
+  document.getElementById('mv-status-group').style.display = currentUser.role === 'sindico' ? '' : 'none';
+  document.getElementById('mv-obs-group').style.display    = '';
+
+  atualizarPreviewFotos();
+  openModal('modal-vist');
+}
+
+function previewFotos(input) {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    if (file.size > 5 * 1024 * 1024) { toast('⚠️ Foto muito grande (máx 5MB): ' + file.name, 'danger'); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      fotosNovas.push({ file, preview: e.target.result, url: null });
+      atualizarPreviewFotos();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function atualizarPreviewFotos() {
+  document.getElementById('upload-preview').innerHTML = fotosNovas.map((f,i) =>
+    `<div class="upload-thumb-wrap">
+       <img src="${f.preview}" class="upload-thumb"/>
+       <div class="upload-thumb-del" onclick="removerFoto(${i})">✕</div>
+     </div>`
+  ).join('');
+}
+
+function removerFoto(idx) {
+  fotosNovas.splice(idx, 1);
+  atualizarPreviewFotos();
+}
+
+async function salvarVistoria() {
+  const id    = document.getElementById('mv-id').value;
+  const local = document.getElementById('mv-local').value.trim();
+  const tipo  = document.getElementById('mv-tipo').value;
+  const desc  = document.getElementById('mv-desc').value.trim();
+  const obs   = document.getElementById('mv-obs').value.trim();
+  const status= document.getElementById('mv-status').value || 'Aberta';
+
+  if (!local || !desc) { toast('⚠️ Preencha o local e a descrição.', 'danger'); return; }
+
+  const btn = document.getElementById('mv-save-btn');
+  btn.textContent = '⏳ Salvando...'; btn.disabled = true;
+
+  try {
+    // Upload das fotos novas (que ainda têm file)
+    const fotosParaUpload = fotosNovas.filter(f => f.file !== null);
+    const fotosExistentes = fotosNovas.filter(f => f.url !== null && f.file === null).map(f => f.url);
+
+    let novasUrls = [];
+    const condoId = CONDO.id;
+    const vistId  = id || 'temp_' + Date.now();
+
+    for (const foto of fotosParaUpload) {
+      try {
+        const { url } = await DB.Storage.uploadFoto(foto.file, condoId, vistId);
+        novasUrls.push(url);
+      } catch(e) {
+        console.warn('Erro upload foto:', e);
+        // Fallback: base64
+        novasUrls.push(foto.preview);
+      }
+    }
+
+    const todasFotos = [...fotosExistentes, ...novasUrls];
+
+    if (id) {
+      // Edição
+      await DB.Vistorias.atualizar(id, { local, tipo, descricao: desc, observacao: obs, status, fotos: todasFotos });
+      toast('✅ Vistoria atualizada!', 'success');
+    } else {
+      // Nova
+      const nova = await DB.Vistorias.criar({
+        condo_id:   CONDO.id,
+        condo_nome: CONDO.nome,
+        user_id:    currentUser.id,
+        user_nome:  currentUser.nome,
+        user_cargo: currentUser.cargo || '',
+        local, tipo,
+        descricao:  desc,
+        observacao: '',
+        status:     'Aberta',
+        fotos:      todasFotos,
+      });
+
+      // Se tinha uploads com vistId temp, atualizar caminhos (opcional)
+      adicionarNotificacao('📋 Nova vistoria registrada', `${tipo} em ${local}`, '📋');
+      toast('✅ Vistoria registrada!', 'success');
+    }
+
+    closeModal('modal-vist');
+    fotosNovas = [];
+    atualizarBadges();
+
+    const pg = document.getElementById('pg-vistorias');
+    if (pg.classList.contains('active')) renderVistorias();
+    else renderDashboard();
+
+  } catch(e) {
+    toast('❌ Erro ao salvar: ' + e.message, 'danger');
+  } finally {
+    btn.textContent = '💾 Salvar'; btn.disabled = false;
+  }
+}
+
+async function excluirVistoria(id) {
+  if (!confirm('Excluir esta vistoria?')) return;
+  await DB.Vistorias.deletar(id);
+  atualizarBadges();
+  renderVistorias();
+  toast('🗑️ Vistoria excluída.', 'danger');
+}
+
+/* ============================================================
+   RESOLVER VISTORIA (síndico)
+   ============================================================ */
+async function openResolver(id) {
+  const v = await DB.Vistorias.porId(id);
+  if (!v) return;
+  document.getElementById('mr-id').value = id;
+  document.getElementById('mr-obs').value = '';
+  document.getElementById('mr-info').innerHTML =
+    `📋 <strong>${esc(v.tipo)}</strong> em <strong>${esc(v.local)}</strong><br>
+     <span class="text-sm">${esc(v.descricao||'')}</span>`;
+  openModal('modal-resolver');
+}
+
+async function confirmarResolver() {
+  const id  = document.getElementById('mr-id').value;
+  const obs = document.getElementById('mr-obs').value.trim();
+  try {
+    await DB.Vistorias.resolver(id, obs, currentUser.id);
+    adicionarNotificacao('✅ Vistoria resolvida', 'Marcada como resolvida.', '✅');
+    closeModal('modal-resolver');
+    atualizarBadges();
+    renderVistorias();
+    toast('✅ Vistoria marcada como Resolvida!', 'success');
+  } catch(e) {
+    toast('❌ Erro: ' + e.message, 'danger');
+  }
+}
+
+/* ============================================================
+   RELATÓRIOS (síndico)
+   ============================================================ */
+async function renderRelatorios() {
+  loading('rel-stats');
+  try {
+    const vist = await DB.Vistorias.listar({ condoId: CONDO.id });
+    const ab   = vist.filter(v => v.status === 'Aberta').length;
+    const rs   = vist.filter(v => v.status === 'Resolvida').length;
+    const tx   = vist.length > 0 ? Math.round((rs / vist.length) * 100) : 0;
+
+    document.getElementById('rel-stats').innerHTML = [
+      { cor:'#6366f1', lbl:'Total',          val: vist.length, icon:'📋' },
+      { cor:'#d97706', lbl:'Em Aberto',      val: ab,          icon:'⏳' },
+      { cor:'#059669', lbl:'Resolvidas',     val: rs,          icon:'✅' },
+      { cor:'#0284c7', lbl:'Taxa Resolução', val: tx+'%',      icon:'📈' },
+    ].map(s => `
+      <div class="stat-mini" style="border-top-color:${s.cor}">
+        <div class="s-val" style="color:${s.cor}">${s.icon} ${s.val}</div>
+        <div class="s-lbl">${s.lbl}</div>
+      </div>`).join('');
+
+    // Por tipo
+    const tipos = {};
+    vist.forEach(v => { tipos[v.tipo] = (tipos[v.tipo]||0)+1; });
+    document.getElementById('rel-por-tipo').innerHTML = Object.entries(tipos)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([tipo, qtd]) => {
+        const pct = Math.round((qtd / vist.length) * 100);
+        return `<div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:3px">
+            <span>${tipoIcon(tipo)} ${esc(tipo)}</span><strong>${qtd}</strong>
+          </div>
+          <div style="background:#f1f5f9;border-radius:999px;height:7px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:${CONDO.cor||'#4f46e5'};border-radius:999px"></div>
+          </div>
+        </div>`;
+      }).join('') || '<p class="text-muted text-sm">Sem dados.</p>';
+
+    // Por funcionário
+    const funcs = {};
+    vist.forEach(v => { funcs[v.user_nome] = (funcs[v.user_nome]||0)+1; });
+    document.getElementById('rel-por-func').innerHTML = Object.entries(funcs)
+      .sort((a,b)=>b[1]-a[1]).slice(0,6)
+      .map(([nome, qtd]) => `
+        <div style="display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
+          <div style="width:30px;height:30px;border-radius:50%;background:${CONDO.cor||'#4f46e5'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0">${nome.charAt(0)}</div>
+          <div style="flex:1;font-size:.85rem;font-weight:600">${esc(nome)}</div>
+          <span class="badge badge-blue">${qtd}</span>
+        </div>`).join('') || '<p class="text-muted text-sm">Sem dados.</p>';
+
+    // Por dia (últimos 7 dias)
+    const hoje   = new Date();
+    const diasHtml = Array.from({length:7}, (_,i) => {
+      const d   = new Date(hoje); d.setDate(hoje.getDate() - (6-i));
+      const key = d.toISOString().slice(0,10);
+      const qtd = vist.filter(v => v.criado_em?.startsWith(key)).length;
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span style="font-size:.75rem;font-weight:700;color:${CONDO.cor||'#4f46e5'}">${qtd||''}</span>
+        <div style="width:100%;height:${Math.max(qtd*8,4)}px;background:${CONDO.cor||'#4f46e5'};border-radius:4px 4px 0 0;opacity:.8"></div>
+        <span style="font-size:.6rem;color:var(--muted)">${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span>
+      </div>`;
+    });
+    document.getElementById('rel-por-dia').innerHTML =
+      `<div style="display:flex;align-items:flex-end;gap:4px;height:80px">${diasHtml.join('')}</div>`;
+
+  } catch(e) {
+    document.getElementById('rel-stats').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar relatórios.</div>';
+  }
+}
+
+/* ============================================================
+   EQUIPE (síndico)
+   ============================================================ */
+async function renderEquipe() {
+  loading('equipe-list');
+  try {
+    const users = await DB.Usuarios.porCondo(CONDO.id);
+    const funcs = users.filter(u => u.role === 'funcionario');
+    const vist  = await DB.Vistorias.listar({ condoId: CONDO.id });
+
+    document.getElementById('equipe-list').innerHTML = funcs.map(u => {
+      const total  = vist.filter(v => v.user_id === u.id).length;
+      const abertas= vist.filter(v => v.user_id === u.id && v.status === 'Aberta').length;
+      return `
+      <div class="card mb-2" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <div style="width:50px;height:50px;border-radius:50%;background:${CONDO.cor||'#4f46e5'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;flex-shrink:0">${u.nome.charAt(0)}</div>
+        <div style="flex:1">
+          <div style="font-weight:800">${esc(u.nome)}</div>
+          <div class="text-sm text-muted">${esc(u.cargo||'Funcionário')} · ${esc(u.email)}</div>
+        </div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap">
+          <div style="text-align:center"><div style="font-weight:800;font-size:1.1rem">${total}</div><div class="text-xs text-muted">Vistorias</div></div>
+          <div style="text-align:center"><div style="font-weight:800;font-size:1.1rem;color:${abertas>0?'#d97706':'#059669'}">${abertas}</div><div class="text-xs text-muted">Em Aberto</div></div>
+        </div>
+        <span class="badge ${u.ativo?'badge-green':'badge-red'}">${u.ativo?'Ativo':'Inativo'}</span>
+      </div>`;
+    }).join('') || emptyState('Nenhum funcionário neste condomínio.');
+  } catch(e) {
+    document.getElementById('equipe-list').innerHTML = '<div class="alert alert-danger">❌ Erro ao carregar equipe.</div>';
+  }
+}
+
+/* ============================================================
+   PERFIL
+   ============================================================ */
+function renderPerfil() {
+  const cor = CONDO.cor || '#4f46e5';
+  document.getElementById('perfil-banner').style.background = `linear-gradient(135deg, ${cor}, ${CONDO.cor2||'#7c3aed'})`;
+  document.getElementById('perfil-avatar').textContent = currentUser.nome.charAt(0).toUpperCase();
+  document.getElementById('perfil-avatar').style.background = cor;
+  document.getElementById('perfil-nome').textContent = currentUser.nome;
+  document.getElementById('perfil-meta').textContent = `${roleLbl(currentUser.role)} · ${currentUser.cargo||''} · ${CONDO.nome}`;
+
+  document.getElementById('perfil-info').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:.6rem">
+      <div class="text-sm"><span class="text-muted">📧 Email:</span> <strong>${esc(currentUser.email)}</strong></div>
+      <div class="text-sm"><span class="text-muted">👔 Cargo:</span> <strong>${esc(currentUser.cargo||'—')}</strong></div>
+      <div class="text-sm"><span class="text-muted">🏢 Condomínio:</span> <strong>${esc(CONDO.nome)}</strong></div>
+      <div class="text-sm"><span class="text-muted">🔑 Perfil:</span> <strong>${roleLbl(currentUser.role)}</strong></div>
+      <div class="text-sm"><span class="text-muted">✅ Status:</span> <span class="badge badge-green">Ativo</span></div>
+    </div>`;
+}
+
+async function alterarSenha() {
+  const nova = document.getElementById('p-nova').value;
+  const conf = document.getElementById('p-conf').value;
+  if (!nova || nova.length < 6) { showAlert('senha-alert','⚠️ Senha deve ter ao menos 6 caracteres.','danger'); return; }
+  if (nova !== conf)            { showAlert('senha-alert','⚠️ As senhas não coincidem.','danger'); return; }
+  try {
+    await Auth.trocarSenha(nova);
+    showAlert('senha-alert','✅ Senha alterada com sucesso!','success');
+    document.getElementById('p-nova').value = '';
+    document.getElementById('p-conf').value = '';
+  } catch(e) {
+    showAlert('senha-alert','❌ ' + e.message,'danger');
+  }
+}
+
+/* ============================================================
+   EXPOR FUNÇÕES GLOBAIS
+   ============================================================ */
+window.setRole            = setRole;
+window.doLogin            = doLogin;
+window.doLogout           = doLogout;
+window.goTo               = goTo;
+window.openLightbox       = openLightbox;
+window.closeLightbox      = closeLightbox;
+window.openModalVistoria  = openModalVistoria;
+window.editarVistoria     = editarVistoria;
+window.excluirVistoria    = excluirVistoria;
+window.previewFotos       = previewFotos;
+window.removerFoto        = removerFoto;
+window.salvarVistoria     = salvarVistoria;
+window.openResolver       = openResolver;
+window.confirmarResolver  = confirmarResolver;
+window.renderVistorias    = renderVistorias;
+window.limparFiltros      = limparFiltros;
+window.marcarTodasLidas   = marcarTodasLidas;
+window.alterarSenha       = alterarSenha;
+window.closeModal         = closeModal;
+
+/* ============================================================
+   INICIALIZAÇÃO
+   ============================================================ */
+detectarCondo();
+
+</script>
+</body>
+</html>

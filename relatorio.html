@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://esm.sh;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+  font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+  connect-src 'self' https://*.supabase.co https://vhagsqyuuqbltfrtnbtx.supabase.co;
+  img-src 'self' data: blob: https:;
+  frame-src 'none';
+">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Relatório PDF — VistoriaCondomínio</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:   #4f46e5; --success:   #059669; --danger:    #dc2626;
+      --warning:   #d97706; --bg:        #f1f5f9; --card:      #ffffff;
+      --text:      #0f172a; --muted:     #64748b; --border:    #e2e8f0;
+      --radius:    12px;    --shadow:    0 2px 16px rgba(0,0,0,.08);
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+    .hidden { display: none !important; }
+    .flex   { display: flex; } .gap-1 { gap: .5rem; } .gap-2 { gap: 1rem; }
+    .items-center { align-items: center; } .justify-between { justify-content: space-between; }
+    .w-full { width: 100%; }
+    .text-sm { font-size: .85rem; } .text-xs { font-size: .75rem; }
+    .text-muted { color: var(--muted); } .bold { font-weight: 700; }
+    .mt-1 { margin-top: .5rem; } .mt-2 { margin-top: 1rem; }
+    .mb-1 { margin-bottom: .5rem; } .mb-2 { margin-bottom: 1rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+
+    .badge { display: inline-flex; align-items: center; gap: .25rem; padding: .2rem .65rem; border-radius: 999px; font-size: .72rem; font-weight: 700; }
+    .badge-green  { background: #d1fae5; color: #065f46; }
+    .badge-red    { background: #fee2e2; color: #991b1b; }
+    .badge-blue   { background: #dbeafe; color: #1e3a8a; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; padding: .55rem 1.2rem; border: none; border-radius: var(--radius); font-size: .88rem; font-weight: 600; cursor: pointer; transition: filter .15s, transform .1s; }
+    .btn:hover  { filter: brightness(.92); } .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger  { background: var(--danger);  color: #fff; }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-ghost   { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+    .btn-sm      { padding: .35rem .8rem; font-size: .8rem; border-radius: 8px; }
+
+    .form-group { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+    .form-group label { font-size: .82rem; font-weight: 600; color: #374151; }
+    .form-control { padding: .6rem .9rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; background: #fafafa; transition: border-color .2s; width: 100%; }
+    .form-control:focus { outline: none; border-color: var(--primary); background: #fff; }
+    .form-hint { font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+
+    /* HEADER */
+    .page-header { background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 1.5rem 2rem; color: #fff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .page-header h1 { font-size: 1.3rem; font-weight: 900; }
+    .page-header p  { font-size: .85rem; opacity: .85; margin-top: .2rem; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+    .alert { padding: .8rem 1.1rem; border-radius: 10px; font-size: .88rem; display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; }
+    .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+    .alert-danger  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-info    { background: #dbeafe; color: #1e3a8a; border: 1px solid #93c5fd; }
+
+    /* FILTROS */
+    .filter-panel { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.5rem; }
+    .filter-panel-header { padding: 1rem 1.5rem; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .filter-panel-header h3 { font-size: .95rem; font-weight: 800; }
+    .filter-panel-body { padding: 1.2rem 1.5rem; }
+
+    /* MODELOS */
+    .modelo-card { border: 2px solid var(--border); border-radius: 12px; padding: 1rem; cursor: pointer; transition: all .2s; text-align: center; background: #fafafa; }
+    .modelo-card:hover    { border-color: var(--primary); background: #eef2ff; }
+    .modelo-card.selected { border-color: var(--primary); background: #eef2ff; box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+    .modelo-icon { font-size: 2rem; margin-bottom: .4rem; }
+    .modelo-nome { font-size: .85rem; font-weight: 700; }
+    .modelo-desc { font-size: .72rem; color: var(--muted); margin-top: .2rem; }
+
+    /* PREVIEW */
+    #preview-area { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.5rem; }
+    .preview-toolbar { background: #1e293b; padding: .6rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+    .preview-toolbar-left { display: flex; align-items: center; gap: .5rem; }
+    .preview-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .preview-title { color: #94a3b8; font-size: .8rem; font-family: monospace; }
+    .preview-actions { display: flex; gap: .5rem; }
+    .preview-container { padding: 1.5rem; min-height: 400px; background: repeating-linear-gradient(0deg, #f8fafc 0px, #f8fafc 1px, transparent 1px, transparent 28px); }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    th { text-align: left; padding: .6rem .9rem; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); white-space: nowrap; }
+    td { padding: .6rem .9rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    /* STATS MINI */
+    .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: .8rem; margin-bottom: 1rem; }
+    .stat-mini { background: #f8fafc; border-radius: 10px; padding: .8rem; text-align: center; border: 1px solid var(--border); }
+    .stat-mini .val { font-size: 1.4rem; font-weight: 800; }
+    .stat-mini .lbl { font-size: .72rem; color: var(--muted); margin-top: .15rem; }
+
+    /* PROGRESSO */
+    .progress-bar  { background: #f1f5f9; border-radius: 999px; height: 8px; overflow: hidden; margin-top: .3rem; }
+    .progress-fill { height: 100%; border-radius: 999px; transition: width .5s; }
+
+    /* TOAST */
+    #toast-wrap { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999; display: flex; flex-direction: column; gap: .5rem; }
+    .toast { background: #1e293b; color: #fff; padding: .7rem 1.1rem; border-radius: 10px; font-size: .85rem; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,.2); min-width: 220px; animation: toastIn .25s ease; }
+    @keyframes toastIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:none; } }
+    .toast.success { border-left: 4px solid #059669; }
+    .toast.danger  { border-left: 4px solid #dc2626; }
+    .toast.info    { border-left: 4px solid #0284c7; }
+
+    /* LOADING */
+    #loading { position: fixed; inset: 0; background: rgba(255,255,255,.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 1rem; }
+    .spinner { width: 48px; height: 48px; border-radius: 50%; border: 5px solid #e2e8f0; border-top-color: var(--primary); animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .container { padding: 1rem .75rem; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .page-header { padding: 1rem; }
+      .filter-panel-body { padding: 1rem; }
+    }
+
+    /* ===================== ESTILOS DO PDF ===================== */
+    .pdf-page { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; font-size: 10pt; padding: 0; }
+    .pdf-capa { width: 100%; min-height: 297mm; display: flex; flex-direction: column; position: relative; overflow: hidden; page-break-after: always; }
+    .pdf-capa-topo { padding: 40px 50px 30px; color: #fff; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .pdf-capa-emoji  { font-size: 4rem; margin-bottom: 1rem; }
+    .pdf-capa-titulo { font-size: 2.2rem; font-weight: 900; line-height: 1.2; margin-bottom: .5rem; }
+    .pdf-capa-sub    { font-size: 1rem; opacity: .85; }
+    .pdf-capa-info   { margin-top: 2rem; display: flex; gap: 2rem; flex-wrap: wrap; }
+    .pdf-capa-info-item  { background: rgba(255,255,255,.15); border-radius: 10px; padding: .6rem 1rem; }
+    .pdf-capa-info-label { font-size: .72rem; opacity: .75; text-transform: uppercase; letter-spacing: .08em; }
+    .pdf-capa-info-val   { font-size: .95rem; font-weight: 800; margin-top: .2rem; }
+    .pdf-capa-rodape { background: rgba(0,0,0,.2); padding: 20px 50px; display: flex; justify-content: space-between; align-items: center; color: rgba(255,255,255,.8); font-size: .78rem; }
+    .pdf-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; margin-bottom: 16px; border-bottom: 3px solid transparent; }
+    .pdf-header-brand  { display: flex; align-items: center; gap: 10px; }
+    .pdf-header-emoji  { font-size: 1.4rem; }
+    .pdf-header-nome   { font-weight: 900; font-size: .9rem; }
+    .pdf-header-slogan { font-size: .68rem; color: #64748b; }
+    .pdf-header-meta   { text-align: right; font-size: .7rem; color: #64748b; }
+    .pdf-section { margin-bottom: 20px; }
+    .pdf-section-title { font-size: .82rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #e2e8f0; display: flex; align-items: center; gap: 6px; }
+    .pdf-stats { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .pdf-stat  { flex: 1; min-width: 80px; border-radius: 8px; padding: 10px 12px; text-align: center; border: 1px solid #e2e8f0; }
+    .pdf-stat .v { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+    .pdf-stat .l { font-size: .65rem; color: #64748b; margin-top: 3px; }
+    .pdf-table { width: 100%; border-collapse: collapse; font-size: .78rem; margin-bottom: 16px; }
+    .pdf-table th { padding: 7px 10px; text-align: left; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #fff; white-space: nowrap; }
+    .pdf-table td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    .pdf-table tr:nth-child(even) td { background: #f8fafc; }
+    .pdf-table tr:last-child td { border-bottom: none; }
+    .pdf-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .65rem; font-weight: 700; }
+    .pdf-badge-green  { background: #d1fae5; color: #065f46; }
+    .pdf-badge-yellow { background: #fef3c7; color: #92400e; }
+    .pdf-vist-card { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 12px; overflow: hidden; page-break-inside: avoid; }
+    .pdf-vist-header { padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .pdf-vist-header-left { display: flex; align-items: center; gap: 8px; }
+    .pdf-vist-tipo-icon { font-size: 1rem; }
+    .pdf-vist-tipo-lbl  { font-weight: 800; font-size: .8rem; }
+    .pdf-vist-local     { font-size: .72rem; color: #64748b; }
+    .pdf-vist-body      { padding: 9px 14px; background: #fff; }
+    .pdf-vist-desc      { font-size: .78rem; line-height: 1.6; color: #374151; }
+    .pdf-vist-obs       { margin-top: 6px; background: #d1fae5; border-radius: 6px; padding: 5px 10px; font-size: .72rem; color: #065f46; }
+    .pdf-vist-footer    { padding: 6px 14px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: .7rem; color: #64748b; }
+    .pdf-progress       { background: #f1f5f9; border-radius: 999px; height: 7px; overflow: hidden; margin-top: 4px; }
+    .pdf-progress-fill  { height: 100%; border-radius: 999px; }
+    .pdf-chart-row  { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+    .pdf-legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: .75rem; }
+    .pdf-legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .pdf-footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: .65rem; color: #94a3b8; }
+    .pdf-assinatura { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+    .pdf-assin-box  { flex: 1; min-width: 150px; text-align: center; border-top: 1px solid #cbd5e1; padding-top: 8px; font-size: .72rem; color: #64748b; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div>
+    <h1>📄 Gerador de Relatórios PDF</h1>
+    <p>Configure, visualize e exporte relatórios de vistorias por condomínio</p>
+  </div>
+  <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;border:2px solid rgba(255,255,255,.4)" onclick="window.history.back()">← Voltar</button>
+</div>
+
+<div class="container">
+
+  <!-- PAINEL DE CONFIGURAÇÃO -->
+  <div class="filter-panel">
+    <div class="filter-panel-header">
+      <h3>⚙️ Configurações do Relatório</h3>
+      <span class="badge badge-blue" id="count-badge">Carregando...</span>
+    </div>
+    <div class="filter-panel-body">
+
+      <!-- MODELOS -->
+      <div class="form-group mb-2">
+        <label>📐 Modelo do Relatório</label>
+        <div class="grid-4" style="margin-top:.4rem" id="modelos-grid"></div>
+      </div>
+
+      <div class="grid-2 gap-2">
+        <div>
+          <div class="form-group">
+            <label>🏢 Condomínio</label>
+            <select id="cfg-condo" class="form-control" onchange="filtrarDados()">
+              <option value="">Todos os condomínios</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>📅 Período — De</label>
+            <input type="date" id="cfg-dt-ini" class="form-control" onchange="filtrarDados()"/>
+          </div>
+          <div class="form-group">
+            <label>📅 Período — Até</label>
+            <input type="date" id="cfg-dt-fim" class="form-control" onchange="filtrarDados()"/>
+          </div>
+        </div>
+        <div>
+          <div class="form-group">
+            <label>📋 Tipo de Vistoria</label>
+            <select id="cfg-tipo" class="form-control" onchange="filtrarDados()">
+              <option value="">Todos os tipos</option>
+              <option>Manutenção</option><option>Segurança</option>
+              <option>Limpeza</option><option>Infra-estrutura</option>
+              <option>Ocorrência</option><option>Rotina</option><option>Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>🔍 Status</label>
+            <select id="cfg-status" class="form-control" onchange="filtrarDados()">
+              <option value="">Todos</option>
+              <option>Aberta</option><option>Resolvida</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>👷 Funcionário</label>
+            <select id="cfg-func" class="form-control" onchange="filtrarDados()">
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPÇÕES EXTRAS -->
+      <div class="card" style="padding:1rem; background:#f8fafc">
+        <div class="bold text-sm mb-1">🎛️ Opções de Conteúdo</div>
+        <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-top:.5rem">
+          <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="checkbox" id="opt-capa"     checked/> Incluir capa</label>
+          <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="checkbox" id="opt-stats"    checked/> Resumo estatístico</label>
+          <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="checkbox" id="opt-graficos" checked/> Gráficos</label>
+          <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="checkbox" id="opt-tabela"   checked/> Tabela de vistorias</label>
+          <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="checkbox" id="opt-fotos"    checked/> Mostrar fotos</label>
+          <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="checkbox" id="opt-assin"    checked/> Campo de assinatura</label>
+        </div>
+      </div>
+
+      <!-- PERSONALIZAÇÃO -->
+      <div class="grid-3 gap-2 mt-2">
+        <div class="form-group" style="margin:0">
+          <label>Título do Relatório</label>
+          <input type="text" id="cfg-titulo" class="form-control" value="Relatório de Vistorias" oninput="atualizarPreview()"/>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Emitido por</label>
+          <input type="text" id="cfg-emitido" class="form-control" placeholder="Ex: Administração" oninput="atualizarPreview()"/>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Observação final</label>
+          <input type="text" id="cfg-obs" class="form-control" placeholder="Ex: Documento oficial" oninput="atualizarPreview()"/>
+        </div>
+      </div>
+
+      <!-- BOTÕES -->
+      <div class="flex gap-1 mt-2" style="flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="atualizarPreview()">👁️ Atualizar Preview</button>
+        <button class="btn btn-success" onclick="gerarPDF()" id="btn-gerar">📥 Baixar PDF</button>
+        <button class="btn btn-warning" onclick="imprimirDireto()">🖨️ Imprimir</button>
+        <button class="btn btn-ghost btn-sm" onclick="limparFiltros()">✕ Limpar Filtros</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div id="preview-area">
+    <div class="preview-toolbar">
+      <div class="preview-toolbar-left">
+        <div class="preview-dot" style="background:#ef4444"></div>
+        <div class="preview-dot" style="background:#f59e0b"></div>
+        <div class="preview-dot" style="background:#10b981"></div>
+        <span class="preview-title" style="margin-left:.5rem">relatorio-vistorias.pdf — Preview</span>
+      </div>
+      <div class="preview-actions">
+        <button class="btn btn-ghost btn-sm" onclick="gerarPDF()" style="color:#fff;border-color:rgba(255,255,255,.3)">📥 Baixar PDF</button>
+      </div>
+    </div>
+    <div class="preview-container" id="preview-container">
+      <div style="text-align:center;padding:4rem;color:#94a3b8">
+        <div style="font-size:3rem">📄</div>
+        <p style="margin-top:.5rem">Configure os filtros acima e clique em <strong>Atualizar Preview</strong></p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LOADING -->
+<div id="loading" class="hidden">
+  <div class="spinner"></div>
+  <div style="font-weight:700;color:#4f46e5;font-size:.95rem">Gerando PDF...</div>
+  <div style="font-size:.82rem;color:#64748b">Aguarde um momento</div>
+</div>
+
+<!-- TOASTS -->
+<div id="toast-wrap"></div>
+
+<script type="module">
+import { DB } from './supabase.js';
+
+/* ============================================================
+   CONSTANTES
+   ============================================================ */
+const MODELOS = [
+  { id:'resumido',  icon:'📋', nome:'Resumido',  desc:'Tabela simples com totais' },
+  { id:'detalhado', icon:'📄', nome:'Detalhado', desc:'Cards completos por vistoria' },
+  { id:'analitico', icon:'📊', nome:'Analítico', desc:'Gráficos e estatísticas' },
+  { id:'completo',  icon:'📑', nome:'Completo',  desc:'Capa + Análise + Detalhes' },
+];
+const CHART_COLORS = ['#4f46e5','#7c3aed','#db2777','#ea580c','#16a34a','#0284c7','#d97706'];
+
+let modeloAtual    = 'completo';
+let dadosFiltrados = [];
+let todasVistorias = [];
+let todosCondos    = [];
+let todosUsuarios  = [];
+
+/* ============================================================
+   UTILITÁRIOS
+   ============================================================ */
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function tipoIcon(tipo) {
+  return {'Manutenção':'🔧','Segurança':'🔒','Limpeza':'🧹','Infra-estrutura':'🏗️','Ocorrência':'⚠️','Rotina':'📋','Outro':'📌'}[tipo]||'📌';
+}
+function fmtData(iso) {
+  return new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function fmtDataHora(iso) {
+  return new Date(iso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function toast(msg, type='success') {
+  const wrap = document.getElementById('toast-wrap');
+  const t    = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 4000);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+async function init() {
+  renderModelos();
+  definirPeriodoPadrao();
+  await carregarDados();
+  popularFiltros();
+  filtrarDados();
+  atualizarPreview();
+}
+
+function renderModelos() {
+  document.getElementById('modelos-grid').innerHTML = MODELOS.map(m => `
+    <div class="modelo-card ${m.id===modeloAtual?'selected':''}" onclick="selecionarModelo('${m.id}', this)">
+      <div class="modelo-icon">${m.icon}</div>
+      <div class="modelo-nome">${m.nome}</div>
+      <div class="modelo-desc">${m.desc}</div>
+    </div>`).join('');
+}
+
+function selecionarModelo(id, el) {
+  modeloAtual = id;
+  document.querySelectorAll('.modelo-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  atualizarPreview();
+}
+
+async function carregarDados() {
+  try {
+    document.getElementById('count-badge').textContent = '⏳ Carregando...';
+    [todasVistorias, todosCondos, todosUsuarios] = await Promise.all([
+      DB.Vistorias.listar(),
+      DB.Condominios.listar(),
+      DB.Usuarios.listar(),
+    ]);
+  } catch(e) {
+    toast('❌ Erro ao carregar dados do Supabase: ' + e.message, 'danger');
+  }
+}
+
+function popularFiltros() {
+  const selC = document.getElementById('cfg-condo');
+  selC.innerHTML = '<option value="">Todos os condomínios</option>' +
+    todosCondos.map(c => `<option value="${c.id}">${esc(c.emoji||'🏢')} ${esc(c.nome)}</option>`).join('');
+
+  const funcs = todosUsuarios.filter(u => u.role === 'funcionario');
+  document.getElementById('cfg-func').innerHTML =
+    '<option value="">Todos os funcionários</option>' +
+    funcs.map(u => `<option value="${u.id}">${esc(u.nome)}</option>`).join('');
+}
+
+function definirPeriodoPadrao() {
+  const hoje = new Date();
+  const ini  = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  document.getElementById('cfg-dt-ini').value = ini.toISOString().slice(0,10);
+  document.getElementById('cfg-dt-fim').value = hoje.toISOString().slice(0,10);
+}
+
+/* ============================================================
+   FILTRAR DADOS
+   ============================================================ */
+function filtrarDados() {
+  let list = [...todasVistorias];
+
+  const condoId = document.getElementById('cfg-condo').value;
+  const tipo    = document.getElementById('cfg-tipo').value;
+  const status  = document.getElementById('cfg-status').value;
+  const funcId  = document.getElementById('cfg-func').value;
+  const dtIni   = document.getElementById('cfg-dt-ini').value;
+  const dtFim   = document.getElementById('cfg-dt-fim').value;
+
+  if (condoId) list = list.filter(v => String(v.condo_id) === String(condoId));
+  if (tipo)    list = list.filter(v => v.tipo    === tipo);
+  if (status)  list = list.filter(v => v.status  === status);
+  if (funcId)  list = list.filter(v => String(v.user_id) === String(funcId));
+  if (dtIni)   list = list.filter(v => v.criado_em >= dtIni);
+  if (dtFim)   list = list.filter(v => v.criado_em <= dtFim + 'T23:59:59');
+
+  list = list.sort((a,b) => b.criado_em.localeCompare(a.criado_em));
+  dadosFiltrados = list;
+
+  document.getElementById('count-badge').textContent =
+    `${list.length} vistoria${list.length!==1?'s':''} selecionada${list.length!==1?'s':''}`;
+  return list;
+}
+
+function limparFiltros() {
+  document.getElementById('cfg-condo').value  = '';
+  document.getElementById('cfg-tipo').value   = '';
+  document.getElementById('cfg-status').value = '';
+  document.getElementById('cfg-func').value   = '';
+  definirPeriodoPadrao();
+  filtrarDados();
+  atualizarPreview();
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function getCondo() {
+  const condoId = document.getElementById('cfg-condo').value;
+  return condoId ? todosCondos.find(c => String(c.id) === String(condoId)) : null;
+}
+
+function getConfig() {
+  return {
+    titulo:   document.getElementById('cfg-titulo').value  || 'Relatório de Vistorias',
+    emitido:  document.getElementById('cfg-emitido').value || 'Administração',
+    obs:      document.getElementById('cfg-obs').value,
+    capa:     document.getElementById('opt-capa').checked,
+    stats:    document.getElementById('opt-stats').checked,
+    graficos: document.getElementById('opt-graficos').checked,
+    tabela:   document.getElementById('opt-tabela').checked,
+    fotos:    document.getElementById('opt-fotos').checked,
+    assin:    document.getElementById('opt-assin').checked,
+    dtIni:    document.getElementById('cfg-dt-ini').value,
+    dtFim:    document.getElementById('cfg-dt-fim').value,
+  };
+}
+
+/* ============================================================
+   CÁLCULOS
+   ============================================================ */
+function calcStats(list) {
+  const abertas  = list.filter(v => v.status === 'Aberta').length;
+  const resolv   = list.filter(v => v.status === 'Resolvida').length;
+  const taxa     = list.length > 0 ? Math.round((resolv/list.length)*100) : 0;
+  const porTipo  = {};
+  const porFunc  = {};
+  const porCondo = {};
+  const porDia   = {};
+
+  list.forEach(v => {
+    porTipo[v.tipo]                    = (porTipo[v.tipo]||0)+1;
+    porFunc[v.user_nome||'—']          = (porFunc[v.user_nome||'—']||0)+1;
+    porCondo[v.condo_nome||'—']        = (porCondo[v.condo_nome||'—']||0)+1;
+    const d = (v.criado_em||'').slice(0,10);
+    if (d) porDia[d]                   = (porDia[d]||0)+1;
+  });
+
+  return { abertas, resolv, taxa, porTipo, porFunc, porCondo, porDia };
+}
+
+/* ============================================================
+   SVG PIZZA
+   ============================================================ */
+function svgPizza(dados, size=100) {
+  const total = Object.values(dados).reduce((a,b)=>a+b,0);
+  if (!total) return '<p style="font-size:.75rem;color:#94a3b8">Sem dados</p>';
+  let angle = -Math.PI/2;
+  const cx = size/2, cy = size/2, r = size/2 - 4;
+  const entradas = Object.entries(dados);
+  let paths = '';
+
+  entradas.forEach(([k,v], i) => {
+    const slice = (v/total) * Math.PI * 2;
+    const x1 = cx + r * Math.cos(angle);
+    const y1 = cy + r * Math.sin(angle);
+    angle += slice;
+    const x2 = cx + r * Math.cos(angle);
+    const y2 = cy + r * Math.sin(angle);
+    const large = slice > Math.PI ? 1 : 0;
+    const cor = CHART_COLORS[i % CHART_COLORS.length];
+    paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z" fill="${cor}" stroke="#fff" stroke-width="1.5"/>`;
+  });
+
+  const legend = entradas.map(([k,v], i) => {
+    const pct = Math.round((v/total)*100);
+    return `<div class="pdf-legend-item">
+      <div class="pdf-legend-dot" style="background:${CHART_COLORS[i%CHART_COLORS.length]}"></div>
+      <span>${esc(k)} — <strong>${v}</strong> (${pct}%)</span>
+    </div>`;
+  }).join('');
+
+  return `<div class="pdf-chart-row">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex-shrink:0">${paths}</svg>
+    <div style="flex:1">${legend}</div>
+  </div>`;
+}
+
+function barrasHoriz(dados, cor) {
+  const max = Math.max(...Object.values(dados), 1);
+  return Object.entries(dados).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v]) => {
+    const pct = Math.round((v/max)*100);
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:3px">
+        <span>${esc(k)}</span><strong>${v}</strong>
+      </div>
+      <div class="pdf-progress"><div class="pdf-progress-fill" style="width:${pct}%;background:${cor}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function barrasDia(porDia, cor) {
+  const entries = Object.entries(porDia).sort((a,b)=>a[0].localeCompare(b[0]));
+  const max = Math.max(...entries.map(([,v])=>v), 1);
+  return `<div style="display:flex;align-items:flex-end;gap:3px;height:60px;margin-top:6px">
+    ${entries.map(([d,v])=>{
+      const h = Math.round((v/max)*52)||4;
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+        <div style="font-size:.6rem;font-weight:700;color:${cor}">${v||''}</div>
+        <div style="width:100%;height:${h}px;background:${cor};border-radius:3px 3px 0 0;opacity:.85"></div>
+        <div style="font-size:.55rem;color:#94a3b8;transform:rotate(-30deg);transform-origin:top left;white-space:nowrap">
+          ${new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+/* ============================================================
+   BLOCOS HTML DO PDF
+   ============================================================ */
+function htmlHeader(condo, cfg) {
+  const cor  = condo?.cor  || '#4f46e5';
+  const cor2 = condo?.cor2 || '#7c3aed';
+  const nome = condo?.nome || 'Todos os Condomínios';
+  const emoji= condo?.emoji || '🏢';
+  return `
+  <div class="pdf-header" style="background:linear-gradient(135deg,${cor}18,${cor2}12);border-bottom-color:${cor}">
+    <div class="pdf-header-brand">
+      <div class="pdf-header-emoji">${emoji}</div>
+      <div>
+        <div class="pdf-header-nome" style="color:${cor}">${esc(nome)}</div>
+        <div class="pdf-header-slogan">${esc(cfg.titulo)}</div>
+      </div>
+    </div>
+    <div class="pdf-header-meta">
+      Gerado em ${new Date().toLocaleDateString('pt-BR')}<br/>
+      por ${esc(cfg.emitido)}
+    </div>
+  </div>`;
+}
+
+function htmlCapa(condo, cfg, stats, total) {
+  const cor   = condo?.cor  || '#4f46e5';
+  const cor2  = condo?.cor2 || '#7c3aed';
+  const nome  = condo?.nome || 'Todos os Condomínios';
+  const emoji = condo?.emoji || '🏢';
+  const dtIni = cfg.dtIni ? fmtData(cfg.dtIni+'T12:00:00') : '—';
+  const dtFim = cfg.dtFim ? fmtData(cfg.dtFim+'T12:00:00') : '—';
+  return `
+  <div class="pdf-capa" style="background:linear-gradient(160deg,${cor} 0%,${cor2} 60%,#1e1b4b 100%)">
+    <div class="pdf-capa-topo">
+      <div class="pdf-capa-emoji">${emoji}</div>
+      <div class="pdf-capa-titulo" style="color:#fff">${esc(cfg.titulo)}</div>
+      <div class="pdf-capa-sub">${esc(nome)}</div>
+      ${condo?.slogan ? `<div style="color:rgba(255,255,255,.7);font-size:.85rem;margin-top:.3rem;font-style:italic">"${esc(condo.slogan)}"</div>` : ''}
+      <div class="pdf-capa-info">
+        <div class="pdf-capa-info-item"><div class="pdf-capa-info-label">Período</div><div class="pdf-capa-info-val">${dtIni} → ${dtFim}</div></div>
+        <div class="pdf-capa-info-item"><div class="pdf-capa-info-label">Total</div><div class="pdf-capa-info-val">${total}</div></div>
+        <div class="pdf-capa-info-item"><div class="pdf-capa-info-label">Em Aberto</div><div class="pdf-capa-info-val">${stats.abertas}</div></div>
+        <div class="pdf-capa-info-item"><div class="pdf-capa-info-label">Resolvidas</div><div class="pdf-capa-info-val">${stats.resolv}</div></div>
+        <div class="pdf-capa-info-item"><div class="pdf-capa-info-label">Taxa Resolução</div><div class="pdf-capa-info-val">${stats.taxa}%</div></div>
+      </div>
+    </div>
+    <div class="pdf-capa-rodape">
+      <span>🏢 VistoriaCondomínio</span>
+      <span>Emitido por: ${esc(cfg.emitido)} · ${new Date().toLocaleString('pt-BR')}</span>
+      ${cfg.obs ? `<span>${esc(cfg.obs)}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function htmlStats(stats, total, cor) {
+  return `
+  <div class="pdf-section">
+    <div class="pdf-section-title" style="color:${cor}">📊 Resumo Estatístico</div>
+    <div class="pdf-stats">
+      <div class="pdf-stat" style="border-top:3px solid ${cor}"><div class="v" style="color:${cor}">${total}</div><div class="l">Total</div></div>
+      <div class="pdf-stat" style="border-top:3px solid #d97706"><div class="v" style="color:#d97706">${stats.abertas}</div><div class="l">Em Aberto</div></div>
+      <div class="pdf-stat" style="border-top:3px solid #059669"><div class="v" style="color:#059669">${stats.resolv}</div><div class="l">Resolvidas</div></div>
+      <div class="pdf-stat" style="border-top:3px solid #0284c7"><div class="v" style="color:#0284c7">${stats.taxa}%</div><div class="l">Taxa Resolução</div></div>
+      <div class="pdf-stat" style="border-top:3px solid #8b5cf6"><div class="v" style="color:#8b5cf6">${Object.keys(stats.porFunc).length}</div><div class="l">Funcionários</div></div>
+    </div>
+  </div>`;
+}
+
+function htmlGraficos(stats, cor) {
+  return `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="pdf-section">
+      <div class="pdf-section-title" style="color:${cor}">🥧 Por Tipo</div>
+      ${svgPizza(stats.porTipo)}
+    </div>
+    <div class="pdf-section">
+      <div class="pdf-section-title" style="color:${cor}">👷 Por Funcionário</div>
+      ${barrasHoriz(stats.porFunc, cor)}
+    </div>
+  </div>
+  <div class="pdf-section">
+    <div class="pdf-section-title" style="color:${cor}">📅 Vistorias por Dia</div>
+    ${Object.keys(stats.porDia).length > 0 ? barrasDia(stats.porDia, cor) : '<p style="font-size:.75rem;color:#94a3b8">Sem dados no período.</p>'}
+  </div>`;
+}
+
+function htmlTabela(list, cor) {
+  return `
+  <div class="pdf-section">
+    <div class="pdf-section-title" style="color:${cor}">📋 Lista de Vistorias</div>
+    <div class="table-wrap">
+      <table class="pdf-table">
+        <thead>
+          <tr style="background:${cor}">
+            <th>#</th><th>Data/Hora</th><th>Condomínio</th>
+            <th>Local</th><th>Tipo</th><th>Responsável</th>
+            <th>Status</th><th>Descrição</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map((v,i) => `
+          <tr>
+            <td style="color:#94a3b8;font-weight:700">${i+1}</td>
+            <td style="white-space:nowrap">${fmtData(v.criado_em)}<br><span style="color:#94a3b8;font-size:.65rem">${new Date(v.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span></td>
+            <td style="font-weight:600">${esc(v.condo_nome||'—')}</td>
+            <td>${esc(v.local||'—')}</td>
+            <td>${tipoIcon(v.tipo)} ${esc(v.tipo)}</td>
+            <td>${esc(v.user_nome||'—')}<br><span style="color:#94a3b8;font-size:.65rem">${esc(v.user_cargo||'')}</span></td>
+            <td><span class="pdf-badge ${v.status==='Aberta'?'pdf-badge-yellow':'pdf-badge-green'}">${v.status}</span></td>
+            <td style="max-width:160px;font-size:.72rem">${esc((v.descricao||'').slice(0,80))}${(v.descricao||'').length>80?'…':''}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function htmlDetalhes(list, cfg, cor) {
+  return `
+  <div class="pdf-section">
+    <div class="pdf-section-title" style="color:${cor}">📄 Detalhamento das Vistorias</div>
+    ${list.map((v,i) => `
+    <div class="pdf-vist-card" style="border-color:${cor}30">
+      <div class="pdf-vist-header" style="background:${cor}12">
+        <div class="pdf-vist-header-left">
+          <span class="pdf-vist-tipo-icon">${tipoIcon(v.tipo)}</span>
+          <div>
+            <div class="pdf-vist-tipo-lbl" style="color:${cor}">#${i+1} · ${esc(v.tipo)}</div>
+            <div class="pdf-vist-local">📍 ${esc(v.local||'—')} · ${esc(v.condo_nome||'—')}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <span class="pdf-badge ${v.status==='Aberta'?'pdf-badge-yellow':'pdf-badge-green'}">${v.status==='Aberta'?'⏳':'✅'} ${v.status}</span>
+          <div style="font-size:.65rem;color:#64748b;margin-top:3px">${fmtDataHora(v.criado_em)}</div>
+        </div>
+      </div>
+      <div class="pdf-vist-body">
+        <div class="pdf-vist-desc">${esc(v.descricao||'')}</div>
+        ${v.observacao ? `<div class="pdf-vist-obs">📝 <strong>Resolução:</strong> ${esc(v.observacao)}</div>` : ''}
+        ${cfg.fotos && v.fotos && v.fotos.length > 0 ? `
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+            ${v.fotos.map(f=>`<img src="${f}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0"/>`).join('')}
+          </div>` : ''}
+      </div>
+      <div class="pdf-vist-footer">
+        <span>👤 ${esc(v.user_nome||'—')} ${v.user_cargo?'· '+esc(v.user_cargo):''}</span>
+        <span>${fmtDataHora(v.criado_em)}</span>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function htmlAssinatura(cfg) {
+  return `
+  <div class="pdf-assinatura">
+    <div class="pdf-assin-box">Assinatura do Síndico<br><span style="font-size:.65rem;margin-top:4px;display:block">Data: ___/___/______</span></div>
+    <div class="pdf-assin-box">Assinatura do Responsável<br><span style="font-size:.65rem;margin-top:4px;display:block">Data: ___/___/______</span></div>
+    <div class="pdf-assin-box">${esc(cfg.emitido||'Administração')}<br><span style="font-size:.65rem;margin-top:4px;display:block">${new Date().toLocaleDateString('pt-BR')}</span></div>
+  </div>`;
+}
+
+function htmlRodape(cfg) {
+  return `
+  <div class="pdf-footer">
+    <span>🏢 VistoriaCondomínio · ${esc(cfg.titulo)}</span>
+    <span>${cfg.obs||''}</span>
+    <span>${new Date().toLocaleDateString('pt-BR')}</span>
+  </div>`;
+}
+
+/* ============================================================
+   MONTAR RELATÓRIO
+   ============================================================ */
+function montarRelatorio(list, cfg, modelo) {
+  const condo  = getCondo();
+  const cor    = condo?.cor  || '#4f46e5';
+  const stats  = calcStats(list);
+  const total  = list.length;
+
+  let html = `<div class="pdf-page">`;
+
+  if (cfg.capa && (modelo === 'completo' || modelo === 'analitico')) {
+    html += htmlCapa(condo, cfg, stats, total);
+  }
+
+  html += htmlHeader(condo, cfg);
+
+  if (total === 0) {
+    html += `<div style="text-align:center;padding:3rem;color:#94a3b8">
+      <div style="font-size:2.5rem">📭</div>
+      <p style="margin-top:.5rem;font-weight:700">Nenhuma vistoria encontrada</p>
+      <p style="font-size:.8rem;margin-top:.3rem">Ajuste os filtros e tente novamente.</p>
+    </div>`;
+    html += htmlRodape(cfg);
+    html += `</div>`;
+    return html;
+  }
+
+  if (cfg.stats)   html += htmlStats(stats, total, cor);
+  if (cfg.graficos && (modelo === 'analitico' || modelo === 'completo')) html += htmlGraficos(stats, cor);
+  if (cfg.tabela   && (modelo === 'resumido'  || modelo === 'completo')) html += htmlTabela(list, cor);
+  if (modelo === 'detalhado' || modelo === 'completo') html += htmlDetalhes(list, cfg, cor);
+  if (cfg.assin)   html += htmlAssinatura(cfg);
+
+  html += htmlRodape(cfg);
+  html += `</div>`;
+  return html;
+}
+
+/* ============================================================
+   PREVIEW
+   ============================================================ */
+function atualizarPreview() {
+  filtrarDados();
+  const cfg  = getConfig();
+  const html = montarRelatorio(dadosFiltrados, cfg, modeloAtual);
+  document.getElementById('preview-container').innerHTML =
+    `<div style="transform:scale(.65);transform-origin:top left;width:154%;border:1px solid #e2e8f0;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,.1)">${html}</div>`;
+}
+
+/* ============================================================
+   GERAR PDF
+   ============================================================ */
+function gerarPDF() {
+  filtrarDados();
+  if (dadosFiltrados.length === 0) {
+    toast('⚠️ Nenhuma vistoria encontrada com os filtros selecionados.', 'danger');
+    return;
+  }
+
+  document.getElementById('loading').classList.remove('hidden');
+
+  setTimeout(() => {
+    const cfg    = getConfig();
+    const html   = montarRelatorio(dadosFiltrados, cfg, modeloAtual);
+    const condo  = getCondo();
+    const cor    = condo?.cor  || '#4f46e5';
+    const cor2   = condo?.cor2 || '#7c3aed';
+
+    const janelaConteudo = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <title>${cfg.titulo}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter','Segoe UI',Arial,sans-serif; background:#fff; color:#0f172a; font-size:10pt; }
+    @media print {
+      @page { size: A4; margin: 0; }
+      body { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+      .pdf-capa { page-break-after:always; }
+      .pdf-vist-card { page-break-inside:avoid; }
+    }
+    .pdf-page  { width:210mm; min-height:297mm; margin:0 auto; padding:0; }
+    .pdf-capa  { width:100%; min-height:297mm; display:flex; flex-direction:column; background:linear-gradient(160deg,${cor} 0%,${cor2} 60%,#1e1b4b 100%); }
+    .pdf-capa-topo   { padding:50px 50px 40px; color:#fff; flex:1; display:flex; flex-direction:column; justify-content:center; }
+    .pdf-capa-emoji  { font-size:4rem; margin-bottom:1rem; }
+    .pdf-capa-titulo { font-size:2.4rem; font-weight:900; line-height:1.2; color:#fff; }
+    .pdf-capa-sub    { font-size:1.1rem; color:rgba(255,255,255,.85); margin-top:.4rem; }
+    .pdf-capa-info   { margin-top:2.5rem; display:flex; gap:1.5rem; flex-wrap:wrap; }
+    .pdf-capa-info-item  { background:rgba(255,255,255,.15); border-radius:10px; padding:10px 16px; }
+    .pdf-capa-info-label { font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; opacity:.75; }
+    .pdf-capa-info-val   { font-size:1rem; font-weight:800; margin-top:3px; }
+    .pdf-capa-rodape { background:rgba(0,0,0,.25); padding:16px 50px; display:flex; justify-content:space-between; color:rgba(255,255,255,.8); font-size:.75rem; }
+    .pdf-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; margin:0 0 16px; border-bottom:3px solid ${cor}; background:linear-gradient(135deg,${cor}18,${cor2}12); }
+    .pdf-header-brand  { display:flex; align-items:center; gap:10px; }
+    .pdf-header-emoji  { font-size:1.5rem; }
+    .pdf-header-nome   { font-weight:900; font-size:.95rem; color:${cor}; }
+    .pdf-header-slogan { font-size:.7rem; color:#64748b; }
+    .pdf-header-meta   { text-align:right; font-size:.7rem; color:#64748b; }
+    .pdf-section       { margin:0 20px 20px; }
+    .pdf-section-title { font-size:.8rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:${cor}; margin-bottom:10px; padding-bottom:6px; border-bottom:2px solid #e2e8f0; }
+    .pdf-stats { display:flex; gap:10px; flex-wrap:wrap; }
+    .pdf-stat  { flex:1; min-width:80px; border-radius:8px; padding:10px 12px; text-align:center; border:1px solid #e2e8f0; }
+    .pdf-stat .v { font-size:1.4rem; font-weight:800; line-height:1; }
+    .pdf-stat .l { font-size:.65rem; color:#64748b; margin-top:3px; }
+    .pdf-table { width:100%; border-collapse:collapse; font-size:.75rem; }
+    .pdf-table th { padding:7px 10px; text-align:left; font-size:.63rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#fff; background:${cor}; white-space:nowrap; }
+    .pdf-table td { padding:7px 10px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+    .pdf-table tr:nth-child(even) td { background:#f8fafc; }
+    .pdf-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:.63rem; font-weight:700; }
+    .pdf-badge-green  { background:#d1fae5; color:#065f46; }
+    .pdf-badge-yellow { background:#fef3c7; color:#92400e; }
+    .pdf-vist-card { border:1px solid ${cor}30; border-radius:8px; margin-bottom:12px; overflow:hidden; page-break-inside:avoid; }
+    .pdf-vist-header { padding:9px 14px; background:${cor}12; display:flex; align-items:center; justify-content:space-between; }
+    .pdf-vist-header-left { display:flex; align-items:center; gap:8px; }
+    .pdf-vist-tipo-lbl { font-weight:800; font-size:.8rem; color:${cor}; }
+    .pdf-vist-local    { font-size:.7rem; color:#64748b; }
+    .pdf-vist-body     { padding:9px 14px; }
+    .pdf-vist-desc     { font-size:.76rem; line-height:1.6; color:#374151; }
+    .pdf-vist-obs      { margin-top:6px; background:#d1fae5; border-radius:6px; padding:5px 10px; font-size:.7rem; color:#065f46; }
+    .pdf-vist-footer   { padding:6px 14px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; font-size:.68rem; color:#64748b; }
+    .pdf-chart-row   { display:flex; gap:16px; align-items:flex-start; }
+    .pdf-legend-item { display:flex; align-items:center; gap:6px; margin-bottom:5px; font-size:.72rem; }
+    .pdf-legend-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .pdf-progress    { background:#f1f5f9; border-radius:999px; height:7px; overflow:hidden; margin-top:3px; }
+    .pdf-progress-fill { height:100%; border-radius:999px; }
+    .pdf-assinatura { display:flex; gap:20px; margin:20px 20px 0; }
+    .pdf-assin-box  { flex:1; text-align:center; border-top:1px solid #cbd5e1; padding-top:8px; font-size:.7rem; color:#64748b; }
+    .pdf-footer { display:flex; justify-content:space-between; font-size:.63rem; color:#94a3b8; padding:10px 20px 16px; border-top:1px solid #e2e8f0; margin-top:16px; }
+  </style>
+</head>
+<body>
+  ${html}
+  <script>window.onload=function(){ setTimeout(function(){ window.print(); },600); };<\/script>
+</body>
+</html>`;
+
+    const blob = new Blob([janelaConteudo], { type: 'text/html;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    window.open(url, '_blank', 'width=900,height=700');
+
+    document.getElementById('loading').classList.add('hidden');
+    toast('✅ PDF aberto! Use Ctrl+P → Salvar como PDF.', 'success');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }, 400);
+}
+
+function imprimirDireto() {
+  filtrarDados();
+  if (dadosFiltrados.length === 0) { toast('⚠️ Nenhuma vistoria encontrada.', 'danger'); return; }
+  gerarPDF();
+}
+
+/* ============================================================
+   EXPOR FUNÇÕES GLOBAIS
+   ============================================================ */
+window.selecionarModelo  = selecionarModelo;
+window.filtrarDados      = filtrarDados;
+window.limparFiltros     = limparFiltros;
+window.atualizarPreview  = atualizarPreview;
+window.gerarPDF          = gerarPDF;
+window.imprimirDireto    = imprimirDireto;
+
+/* ============================================================
+   START
+   ============================================================ */
+init();
+</script>
+</body>
+</html>
