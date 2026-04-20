@@ -1,8 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// ✅ Substitua pelos seus dados reais do Supabase
-const SUPABASE_URL  = 'https://vhagsqyuuqbltfrtnbtx.supabase.co'
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoYWdzcXl1dXFibHRmcnRuYnR4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjYyNjEwNCwiZXhwIjoyMDkyMjAyMTA0fQ.1DvXNH-IQUnFEIL7cdYIn7eDJM-UpQdLlsWT6Wc8CI4' // anon key
+const SUPABASE_URL = 'https://vhagsqyuuqbltfrtnbtx.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoYWdzcXl1dXFibHRmcnRuYnR4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjYyNjEwNCwiZXhwIjoyMDkyMjAyMTA0fQ.1DvXNH-IQUnFEIL7cdYIn7eDJM-UpQdLlsWT6Wc8CI4'
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -28,15 +27,33 @@ export const Auth = {
     }
   },
 
+  // ✅ CORRIGIDO — era chamado como Auth.criarUsuario() no index.html
+  async criarUsuario({ nome, email, senha, role, cargo, condoId, condoNome }) {
+    try {
+      const { data, error } = await supabase.functions.invoke('criar-usuario', {
+        body: { nome, email, senha, role, cargo, condo_id: condoId, condo_nome: condoNome }
+      })
+      if (error) throw new Error(error.message || 'Erro ao invocar função')
+      if (data?.erro) return { ok: false, erro: data.erro }
+      return { ok: true, usuario: data }
+    } catch (e) {
+      return { ok: false, erro: e.message }
+    }
+  },
+
   async logout() {
     await supabase.auth.signOut()
   }
 }
 
 /* ============================================================
-   DB — CONDOMÍNIOS
+   DB
    ============================================================ */
 export const DB = {
+
+  /* ----------------------------------------------------------
+     CONDOMÍNIOS
+     ---------------------------------------------------------- */
   Condominios: {
     async listar() {
       const { data, error } = await supabase
@@ -91,9 +108,9 @@ export const DB = {
     }
   },
 
-  /* ============================================================
-     DB — USUÁRIOS
-     ============================================================ */
+  /* ----------------------------------------------------------
+     USUÁRIOS
+     ---------------------------------------------------------- */
   Usuarios: {
     async listar() {
       const { data, error } = await supabase
@@ -114,17 +131,6 @@ export const DB = {
       return data
     },
 
-    // ✅ Criar usuário via Edge Function (cria no Auth + tabela usuarios)
-    async criar({ nome, email, senha, role, cargo, condo_id, ativo, telefone }) {
-      const { data, error } = await supabase.functions.invoke('criar-usuario', {
-        body: { nome, email, senha, role, cargo, condo_id, ativo, telefone }
-      })
-      if (error) throw new Error(error.message || 'Erro ao invocar função')
-      if (data?.erro) throw new Error(data.erro)
-      return data
-    },
-
-    // ✅ Atualizar dados (sem mexer no Auth)
     async atualizar(id, dados) {
       const { error } = await supabase
         .from('usuarios')
@@ -134,7 +140,6 @@ export const DB = {
     },
 
     async excluir(id) {
-      // Busca o auth_id antes de excluir
       const { data: u } = await supabase
         .from('usuarios')
         .select('auth_id')
@@ -147,40 +152,55 @@ export const DB = {
         .eq('id', id)
       if (error) throw error
 
-      // Tenta excluir do Auth também via Edge Function
       if (u?.auth_id) {
         await supabase.functions.invoke('excluir-usuario', {
           body: { auth_id: u.auth_id }
-        }).catch(() => {}) // silencia se não existir
+        }).catch(() => {})
       }
     }
   },
 
-  /* ============================================================
-     DB — VISTORIAS
-     ============================================================ */
+  /* ----------------------------------------------------------
+     VISTORIAS
+     ---------------------------------------------------------- */
   Vistorias: {
-    async listar() {
-      const { data, error } = await supabase
+    // ✅ CORRIGIDO — agora aceita filtros (userId, condoId, tipo, status)
+    async listar(filtros = {}) {
+      let query = supabase
         .from('vistorias')
-        .select(`
-          *,
-          condominios ( nome ),
-          usuarios    ( nome )
-        `)
+        .select('*')
         .order('criado_em', { ascending: false })
-      if (error) throw error
 
-      return (data || []).map(v => ({
-        ...v,
-        condo_nome: v.condominios?.nome || '—',
-        user_nome:  v.usuarios?.nome    || '—',
-      }))
+      if (filtros.userId)  query = query.eq('user_id', filtros.userId)
+      if (filtros.condoId) query = query.eq('condo_id', filtros.condoId)
+      if (filtros.tipo)    query = query.eq('tipo', filtros.tipo)
+      if (filtros.status)  query = query.eq('status', filtros.status)
+
+      const { data, error } = await query
+      if (error) throw error
+      return data || []
     },
 
-    async salvar(dados) {
-      const { error } = await supabase.from('vistorias').insert(dados)
+    // ✅ ADICIONADO — era chamado como DB.Vistorias.porId() no index.html
+    async porId(id) {
+      const { data, error } = await supabase
+        .from('vistorias')
+        .select('*')
+        .eq('id', id)
+        .single()
       if (error) throw error
+      return data
+    },
+
+    // ✅ CORRIGIDO — era chamado como DB.Vistorias.criar() no index.html
+    async criar(dados) {
+      const { data, error } = await supabase
+        .from('vistorias')
+        .insert(dados)
+        .select()
+        .single()
+      if (error) throw error
+      return data
     },
 
     async atualizar(id, dados) {
@@ -191,12 +211,56 @@ export const DB = {
       if (error) throw error
     },
 
-    async excluir(id) {
+    // ✅ CORRIGIDO — era chamado como DB.Vistorias.deletar() no index.html
+    async deletar(id) {
       const { error } = await supabase
         .from('vistorias')
         .delete()
         .eq('id', id)
       if (error) throw error
+    }
+  },
+
+  /* ----------------------------------------------------------
+     STORAGE — FOTOS
+     ---------------------------------------------------------- */
+  // ✅ ADICIONADO — era chamado no index.html mas não existia
+  Storage: {
+    async uploadFoto(file, condoId, vistoriaId) {
+      const ext      = file.name.split('.').pop()
+      const filename = `${condoId}/${vistoriaId}/${Date.now()}.${ext}`
+
+      const { error } = await supabase.storage
+        .from('fotos-vistorias')
+        .upload(filename, file, { upsert: true })
+
+      if (error) throw error
+
+      const { data } = supabase.storage
+        .from('fotos-vistorias')
+        .getPublicUrl(filename)
+
+      return { url: data.publicUrl }
+    }
+  },
+
+  /* ----------------------------------------------------------
+     LOGS
+     ---------------------------------------------------------- */
+  // ✅ ADICIONADO — era chamado no index.html mas não existia
+  Logs: {
+    async registrar(acao, detalhes = {}, userId = null) {
+      try {
+        await supabase.from('logs').insert({
+          acao,
+          detalhes,
+          user_id:    userId,
+          criado_em:  new Date().toISOString()
+        })
+      } catch (e) {
+        // Silencia erro de log para não travar a aplicação
+        console.warn('Erro ao registrar log:', e.message)
+      }
     }
   }
 }
